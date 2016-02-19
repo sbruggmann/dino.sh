@@ -165,6 +165,7 @@ fi
 if [[ "$1" == "selfupdate" || "$1" == "-u" ]]; then
   echo "dino.sh | Self-Update:"
   printf "dino.sh | Update to the latest dino.sh Version? [y] "
+  read SAY_OK
   if [[ "$SAY_OK" == "y" ]]; then
 
     if [[ "$DINO_SETTINGS_OUTPUT" == "verbose" ]]; then
