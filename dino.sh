@@ -1,11 +1,12 @@
 #!/bin/sh
 
 # Docker Development init for Neos and Flow
-# version: 0.4.1
+# version: 0.4.2
 
 TIME_BEFORE=$(date +%s)
 CURRENT_VERSION=$(echo `tail -n +4 dino.sh | head -n 1 | grep -i "[0-9]+\.[0-9]+"`)
 
+BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
 PROJECT_MAIN="_main_1"
 PROJECT_MAIN_I="_main"
@@ -20,7 +21,7 @@ PROJECT_SATIS_I="_satis"
 PROJECT_MAIL="_mail_1"
 PROJECT_MAIL_I="_mail"
 DOCKER_IP=$(echo `docker-machine ip default`)
-PATCH_VERSION_URL="https://raw.githubusercontent.com/sbruggmann/dino.sh/0.4.1/patch.diff"
+PATCH_VERSION_URL="https://raw.githubusercontent.com/sbruggmann/dino.sh/0.4.2/patch.diff"
 if [ -d ./www/Flow ]; then
   PROJECT_TYPE="Flow"
 else
@@ -77,13 +78,17 @@ if [[ "$1" == "help" || "$1" == "-h" ]]; then
   echo "  -u,  selfupdate                  download the latest dino.sh"
   echo "                                   run './dino.sh reload' afterwards"
   echo " "
-  echo "       ssh                         login to docker container as www-data."
-  echo "                                   use './dino.sh ssh root' to login as root."
+  echo "       bash [root]                 login to docker container as www-data."
+  echo "                                   use './dino.sh bash root' to login as root."
+  echo "       ssh  [root]                 alias for the './dino.sh bash' command."
   echo " "
   echo "       links                       show symlinks between /docker/www and /docker/host-www"
   echo "       link {path}                 create a symlink"
   echo "       unlink {path}               remove a symlink"
   echo "       copy {path}                 copy data between /docker/www and /docker/host-www"
+  echo " "
+  echo "       satis [bash, build]         login to satis docker container,"
+  echo "                                   or rebuild it directly."
   printf "\n\n"
   exit
 fi
@@ -165,6 +170,7 @@ fi
 if [[ "$1" == "selfupdate" || "$1" == "-u" ]]; then
   echo "dino.sh | Self-Update:"
   printf "dino.sh | Update to the latest dino.sh Version? [y] "
+  read SAY_OK
   if [[ "$SAY_OK" == "y" ]]; then
 
     if [[ "$DINO_SETTINGS_OUTPUT" == "verbose" ]]; then
@@ -225,19 +231,42 @@ if [[ "$1" == "copy" ]]; then
   exit
 fi
 
-if [[ ( "$1" == "ssh" ) && ( "$2" == "root" ) ]]; then
-  echo "dino.sh | SSH:"
+if [[ ( "$1" == "bash" || "$1" == "ssh" ) && ( "$2" == "root" ) ]]; then
+  echo "dino.sh | bash:"
   echo "dino.sh | Login as root.."
 
   docker exec -it -u root "$PROJECT_NAME$PROJECT_MAIN" bash
   printf "\n        | Welcome back on your host terminal\n"
   exit
-elif [[ "$1" == "ssh" ]]; then
-  echo "dino.sh | SSH:"
+elif [[ "$1" == "bash" || "$1" == "ssh" ]]; then
+  echo "dino.sh | bash:"
   echo "dino.sh | Login as www-data.."
 
   docker exec -it -u www-data "$PROJECT_NAME$PROJECT_MAIN" bash
   printf "\n        | Welcome back on your host terminal\n"
+  exit
+fi
+
+if [[ ( "$1" == "satis" ) && ( "$2" == "bash" ) ]]; then
+  echo "dino.sh | satis:"
+  echo "dino.sh | Login as root.."
+
+  docker-compose run --rm satis bash
+  printf "\n        | Welcome back on your host terminal\n"
+  exit
+fi
+if [[ ( "$1" == "satis" ) && ( "$2" == "build" ) ]]; then
+  echo "dino.sh | satis:"
+  echo "dino.sh | Rebuild.."
+
+  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/build.sh"
+  exit
+fi
+if [[ ( "$1" == "satis" ) ]]; then
+  printf "dino.sh | satis:\n"
+  printf "        | Visit http://%s:3080/\n" $DOCKER_IP
+  printf "        | Edit  ~/.dino-composer-satis/config/config.json\n"
+  printf "\n"
   exit
 fi
 
@@ -294,12 +323,29 @@ if [ ! -d ./docker/ ]; then
 
 fi
 
-if grep -q "http://satis:80" "./www/$PROJECT_TYPE/composer.json"; then
+if grep -q "http://satis:80" "$BASE_PATH/www/$PROJECT_TYPE/composer.json"; then
   echo  "dino.sh | Enable satis container.."
   sed 's/#satis-disabled //g' docker-compose.yml > docker-compose.yml.tmp && mv docker-compose.yml.tmp docker-compose.yml
+
+  if [ ! -d ~/.dino-composer-satis/cache ]; then
+    mkdir -p ~/.dino-composer-satis/cache
+  fi
+  if [ ! -d ~/.dino-composer-satis/web ]; then
+    mkdir -p ~/.dino-composer-satis/web
+  fi
+  if [ ! -f ~/.dino-composer-satis/config/config.json ]; then
+    if [ ! -d ~/.dino-composer-satis/config ]; then
+      mkdir -p ~/.dino-composer-satis/config
+    fi
+    cp "$BASE_PATH/docker/satis/config.json" ~/.dino-composer-satis/config/
+    echo  "dino.sh | Created a default satis config .."
+    echo  "dino.sh | - Edit it at ~/.dino-composer-satis/config/config.json !"
+  fi
+
 else
   echo  "dino.sh | Ignore satis container.."
 fi
+
 if [[ "$DINO_SETTINGS_MAIL" == "enabled" ]]; then
   echo  "dino.sh | Enable mail catcher.."
   sed 's/#mail-disabled //g' docker-compose.yml > docker-compose.yml.tmp && mv docker-compose.yml.tmp docker-compose.yml
@@ -545,7 +591,11 @@ TIME_BEFORE_NEOS=$(date +%s)
 printf "\n"
 
 if grep -q "http://satis:80" "./www/$PROJECT_TYPE/composer.json"; then
-  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh"
+  if [ ! -f ~/.dino-composer-satis/web/index.html ]; then
+    docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh"
+  else
+    docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh"
+  fi
   #docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh"
 fi
 

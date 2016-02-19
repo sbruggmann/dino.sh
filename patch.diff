@@ -252,7 +252,7 @@ index 9e041db..0000000
 -
 -Did I forget anyone? Send me a tweet or create pull request!
 diff --git a/docker-compose.yml b/docker-compose.yml
-index 341261a..ba1662a 100644
+index 341261a..e6999d1 100644
 --- a/docker-compose.yml
 +++ b/docker-compose.yml
 @@ -4,31 +4,57 @@
@@ -309,7 +309,7 @@ index 341261a..ba1662a 100644
 +#satis-disabled     VIRTUAL_HOST: satis.localhost
 +#satis-disabled   volumes:
 +#satis-disabled     - "~/.ssh/id_rsa:/var/tmp/id"
-+#satis-disabled     - "~/.dino-composer-satis/config.json:/app/config.json"
++#satis-disabled     - "~/.dino-composer-satis/config/:/app/config/"
 +#satis-disabled     - "~/.dino-composer-satis/cache/:/root/.composer/"
 +#satis-disabled     - "~/.dino-composer-satis/web/:/satisfy/web/"
 +#satis-disabled   ports:
@@ -1143,10 +1143,10 @@ index 4bd8471..6e82376 100755
          ;;
 diff --git a/docker/satis/Dockerfile b/docker/satis/Dockerfile
 new file mode 100644
-index 0000000..55bedeb
+index 0000000..ad8daa7
 --- /dev/null
 +++ b/docker/satis/Dockerfile
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,11 @@
 +FROM ypereirareis/docker-satis:4.0
 +
 +RUN apt-get update && apt-get install -y \
@@ -1156,9 +1156,11 @@ index 0000000..55bedeb
 +ADD config.php /app/config.php
 +ADD startup.sh /app/scripts/startup.sh
 +RUN chmod +x /app/scripts/startup.sh
++RUN rm /app/config.json
++RUN ln -s /app/config/config.json /app/config.json
 diff --git a/docker/satis/config.json b/docker/satis/config.json
 new file mode 100644
-index 0000000..45d344c
+index 0000000..f8e291a
 --- /dev/null
 +++ b/docker/satis/config.json
 @@ -0,0 +1,16 @@
@@ -1166,7 +1168,7 @@ index 0000000..45d344c
 +  "name": "Example Private Repo",
 +  "homepage": "http://satis:80",
 +  "repositories": [
-+    { "type": "vcs", "url": "ssh://hg@bitbucket.org/company/example.private.repository"}
++    { "type": "vcs", "url": "https://github.com/Flownative/neos-compressor"}
 +  ],
 +  "require-all":true,
 +  "require-dependencies":true,
