@@ -1,10 +1,10 @@
 #!/bin/sh
 
 # Docker Development init for Neos and Flow
-# version: 0.4.2
+# version: 0.4.3
 
 TIME_BEFORE=$(date +%s)
-CURRENT_VERSION="0.4.2"
+CURRENT_VERSION="0.4.3"
 
 BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
@@ -21,7 +21,7 @@ PROJECT_SATIS_I="_satis"
 PROJECT_MAIL="_mail_1"
 PROJECT_MAIL_I="_mail"
 DOCKER_IP=$(echo `docker-machine ip default`)
-PATCH_VERSION_URL="https://raw.githubusercontent.com/sbruggmann/dino.sh/0.4.2/patch.diff"
+PATCH_VERSION_URL="https://raw.githubusercontent.com/sbruggmann/dino.sh/$CURRENT_VERSION/patch.diff"
 if [ -d ./www/Flow ]; then
   PROJECT_TYPE="Flow"
 else
