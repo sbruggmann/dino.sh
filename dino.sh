@@ -1,10 +1,10 @@
 #!/bin/sh
 
 # Docker Development init for Neos and Flow
-# version: 0.4.2
+# version: 0.4.3
 
 TIME_BEFORE=$(date +%s)
-CURRENT_VERSION=$(echo `tail -n +4 dino.sh | head -n 1 | grep -i "[0-9]+\.[0-9]+"`)
+CURRENT_VERSION="0.4.3"
 
 BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
@@ -21,7 +21,7 @@ PROJECT_SATIS_I="_satis"
 PROJECT_MAIL="_mail_1"
 PROJECT_MAIL_I="_mail"
 DOCKER_IP=$(echo `docker-machine ip default`)
-PATCH_VERSION_URL="https://raw.githubusercontent.com/sbruggmann/dino.sh/0.4.2/patch.diff"
+PATCH_VERSION_URL="https://raw.githubusercontent.com/sbruggmann/dino.sh/$CURRENT_VERSION/patch.diff"
 if [ -d ./www/Flow ]; then
   PROJECT_TYPE="Flow"
 else
@@ -94,7 +94,7 @@ if [[ "$1" == "help" || "$1" == "-h" ]]; then
 fi
 
 if [[ "$1" == "version" || "$1" == "-v" ]]; then
-  echo "| dino.sh Version: $CURRENT_VERSION"
+  echo "dino.sh | Version: $CURRENT_VERSION"
   exit
 fi
 
@@ -259,7 +259,7 @@ if [[ ( "$1" == "satis" ) && ( "$2" == "build" ) ]]; then
   echo "dino.sh | satis:"
   echo "dino.sh | Rebuild.."
 
-  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/build.sh"
+  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh"
   exit
 fi
 if [[ ( "$1" == "satis" ) ]]; then
@@ -596,7 +596,6 @@ if grep -q "http://satis:80" "./www/$PROJECT_TYPE/composer.json"; then
   else
     docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh"
   fi
-  #docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh"
 fi
 
 docker exec -it "$PROJECT_NAME$PROJECT_MAIN" /docker/bin/run.sh install "$PROJECT_TYPE"
