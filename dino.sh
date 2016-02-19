@@ -4,7 +4,7 @@
 # version: 0.4.2
 
 TIME_BEFORE=$(date +%s)
-CURRENT_VERSION=$(echo `tail -n +4 dino.sh | head -n 1 | grep -i "[0-9]+\.[0-9]+"`)
+CURRENT_VERSION="0.4.2"
 
 BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
@@ -94,7 +94,7 @@ if [[ "$1" == "help" || "$1" == "-h" ]]; then
 fi
 
 if [[ "$1" == "version" || "$1" == "-v" ]]; then
-  echo "| dino.sh Version: $CURRENT_VERSION"
+  echo "dino.sh | Version: $CURRENT_VERSION"
   exit
 fi
 
@@ -259,7 +259,7 @@ if [[ ( "$1" == "satis" ) && ( "$2" == "build" ) ]]; then
   echo "dino.sh | satis:"
   echo "dino.sh | Rebuild.."
 
-  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/build.sh"
+  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh"
   exit
 fi
 if [[ ( "$1" == "satis" ) ]]; then
@@ -596,7 +596,6 @@ if grep -q "http://satis:80" "./www/$PROJECT_TYPE/composer.json"; then
   else
     docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh"
   fi
-  #docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh"
 fi
 
 docker exec -it "$PROJECT_NAME$PROJECT_MAIN" /docker/bin/run.sh install "$PROJECT_TYPE"
