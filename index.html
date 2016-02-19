@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -14,235 +14,251 @@
     <![endif]-->
 
     <title>dino.sh by sbruggmann</title>
-  </head>
+</head>
 
-  <body>
-    <header>
-      <div class="inner">
+<body>
+<header>
+    <div class="inner">
         <h1>dino.sh</h1>
+
         <h2>Docker Development init for Neos and Flow</h2>
-        <a href="https://github.com/sbruggmann/dino.sh" class="button"><small>View project on</small> GitHub</a>
-      </div>
-    </header>
+        <a href="https://github.com/sbruggmann/dino.sh" class="button">
+            <small>View project on</small>
+            GitHub
+        </a>
+    </div>
+</header>
 
-    <div id="content-wrapper">
-      <div class="inner clearfix">
+<div id="content-wrapper">
+    <div class="inner clearfix">
         <section id="main-content">
-          <h1>
-<a id="docker-dinosh" class="anchor" href="#docker-dinosh" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>docker ./dino.sh</h1>
 
-<h2>
-<a id="prerequisites" class="anchor" href="#prerequisites" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Prerequisites</h2>
+            <h2>
+                <a id="prerequisites" class="anchor" href="#prerequisites" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                Install dino.sh
+            </h2>
+            <pre><code>wget https://raw.githubusercontent.com/sbruggmann/dino.sh/master/dino.sh; chmod +x dino.sh;</code></pre>
+            <p>And run it:</p>
+
+            <h1 class="code">
+                <a id="dino-sh" class="anchor" href="#dino-sh" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh
+            </h1>
+            <p>.. loads php-boilerplate Docker Images, Neos Sources, etc.</p>
+
+            <h3 class="code">
+                <a id="dino-help" class="anchor" href="#dino-help" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh help
+            </h3>
+
+            <h4 class="code">
+                <a id="dino-help-reload" class="anchor" href="#dino-help-reload" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh reload
+            </h4>
+            <p>.. reload the project containers and images.</p>
+
+            <h4 class="code">
+                <a id="dino-help-reload-force" class="anchor" href="#dino-help-reload-force" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh reload --force
+            </h4>
+            <p>.. remove the local docker files, and reload the project containers and images.</p>
+
+            <h4 class="code">
+                <a id="dino-bash" class="anchor" href="#dino-bash" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh bash
+            </h4>
+            <p>.. login to the main containers bash as www-data.</p>
+
+            <h4 class="code">
+                <a id="dino-bash-root" class="anchor" href="#dino-bash-root" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh bash root
+            </h4>
+            <p>.. login to the main containers bash as root.</p>
+
+            <h4 class="code">
+                <a id="dino-links" class="anchor" href="#dino-links" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh links
+            </h4>
+            <p>.. show symlinks between vm and host.</p>
+            <p>The complete www Folder is shared with the vm.<br>But for performance reasons, only selected Folders are linked by default.</p>
+
+            <h4 class="code">
+                <a id="dino-link" class="anchor" href="#dino-link" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh link [www/Neos/Packages/Application]
+            </h4>
+            <p>.. create a symlink from /docker/www/Neos/Packages/Application to /docker/host-www/Neos/Packages/Application</p>
+
+            <h4 class="code">
+                <a id="dino-unlink" class="anchor" href="#dino-unlink" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh unlink [www/Neos/Packages/Application]
+            </h4>
+            <p>.. removes a symlink</p>
+
+            <h4 class="code">
+                <a id="dino-copy" class="anchor" href="#dino-copy" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh copy [www/Neos/Packages/Application]
+            </h4>
+            <p>.. copy Files and Folders between /docker/host-www and /docker/www</p>
+
+            <h4 class="code">
+                <a id="dino-selfupdate" class="anchor" href="#dino-selfupdate" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh selfupdate
+            </h4>
+            <p>.. update to the latest dino.sh version</p>
+            <p>After that you need to <a href="#dino-help-reload-force">force reload</a> the docker files.</p>
+
+            <h4 class="code">
+                <a id="dino-version" class="anchor" href="#dino-version" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh version
+            </h4>
+            <p>.. show the current dino.sh version</p>
+
+            <h4 class="code">
+                <a id="dino-satis" class="anchor" href="#dino-satis" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh satis
+            </h4>
+            <p>dino.sh creates a satis container for private repositories if you add the following to your composer.json file:</p>
+            <pre><code>"repositories": [
+    { "type": "vcs", "url": "http://satis:80" }
+]</code></pre>
+            <p>Your private repositories are cached over all projects and the configuration file is stored here:</p>
+            <pre><code>~/.dino-composer-satis/config/config.json</code></pre>
+
+            <h4 class="code">
+                <a id="dino-satis-bash" class="anchor" href="#dino-satis-bash" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh satis bash
+            </h4>
+            <p>.. login to the satis bash.</p>
+
+            <h4 class="code">
+                <a id="dino-satis-build" class="anchor" href="#dino-satis-build" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                dino.sh satis build
+            </h4>
+            <p>.. rebuild the satis cache.</p>
+
+
+
+            <h1>
+                <a id="requirements" class="anchor" href="#requirements" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                Requirements
+            </h1>
+            <p>
+                To work with dino.sh you need a basic docker setup.<br>Follow the next 5 Steps to get it.
+            </p>
+            <ol>
+                <li>
+                    <p>Install <a href="http://brew.sh/" target="_blank">Homebrew</a> and call in the Terminal:</p>
+                    <pre><code>brew update; brew install wget;</code></pre>
+                </li>
+                <li><p>Install <a href="https://www.virtualbox.org/">VirtualBox</a></p></li>
+                <li><p>Install <a href="https://www.docker.com/docker-toolbox">docker-toolbox</a></p></li>
+                <li><p>Start "Docker Quistart Terminal"</p></li>
+                <li>
+                    <p>Remove the by default created docker-machine:</p>
+                    <pre><code>docker-machine rm default</code></pre>
+                </li>
+                <li>
+                    <p>Create a new docker-machine:</p>
+                    <pre><code>docker-machine create --driver virtualbox --virtualbox-disk-size "20000" --virtualbox-memory "4096" --virtualbox-cpu-count "8" default</code></pre>
+                </li>
+                <li>Now you can run <a href="#dino-sh">dino.sh</a></li>
+            </ol>
+
+
+
+
+            <h1>
+                <a id="tipps" class="anchor" href="#tipps" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                Tipps
+            </h1>
+
+            <h3>
+                <a id="tipps-vcs" class="anchor" href="#tipps-vcs" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                Versioning
+            </h3>
+            <p>The only file you need to add to your repository is the dino.sh itself.</p>
+
+            <h1>
+                <a id="credits" class="anchor" href="#credits" aria-hidden="true">
+                    <span aria-hidden="true" class="octicon octicon-link"></span>
+                </a>
+                Credits
+            </h1>
+
+            <p>Thanks to the webdevops for the great <a href="https://github.com/webdevops/php-docker-boilerplate" target="_blank">php-docker-boilerplate</a>.</p>
 
-<ol>
-<li>
-<p><a href="http://brew.sh/">http://brew.sh/</a></p>
-
-<pre><code>brew update
-
-brew install wget
-</code></pre>
-</li>
-<li><p><a href="https://www.virtualbox.org/">https://www.virtualbox.org/</a></p></li>
-<li><p><a href="https://www.docker.com/docker-toolbox">https://www.docker.com/docker-toolbox</a></p></li>
-<li><p>Start "Docker Quistart Terminal"</p></li>
-<li>
-<p>Create a VirtualBox Machine</p>
-
-<pre><code>docker-machine create --driver virtualbox --virtualbox-disk-size "20000" --virtualbox-memory "4096" --virtualbox-cpu-count "8" default
-</code></pre>
-</li>
-</ol>
-
-<h2>
-<a id="add-docker-to-an-existing-project" class="anchor" href="#add-docker-to-an-existing-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Add Docker to an existing Project</h2>
-
-<ol>
-<li>
-<p>Download dino.sh to the Project root from: </p>
-
-<pre><code>wget https://raw.githubusercontent.com/sbruggmann/dino.sh/master/dino.sh
-</code></pre>
-</li>
-<li>
-<p>Fix File permissions:</p>
-
-<pre><code>chmod +x dino.sh
-</code></pre>
-</li>
-<li><p>Add "dino.sh" to Versioning</p></li>
-<li><p>Add "docker*" to .hgignore</p></li>
-<li>
-<p>Add the link to this Repository to your Project-Readme:</p>
-
-<p><a href="https://github.com/sbruggmann/dino.sh">https://github.com/sbruggmann/dino.sh</a></p>
-</li>
-</ol>
-
-<h2>
-<a id="initialize-docker" class="anchor" href="#initialize-docker" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Initialize Docker</h2>
-
-<pre><code>./dino.sh
-</code></pre>
-
-<h3>
-<a id="dinosh-funtion" class="anchor" href="#dinosh-funtion" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>dino.sh Funtion</h3>
-
-<p><strong>Show Help</strong></p>
-
-<pre><code>./dino.sh help
-</code></pre>
-
-<p><strong>Show current Version</strong></p>
-
-<pre><code>./dino.sh version
-</code></pre>
-
-<p><strong>Reload Docker Project Containers and Images</strong></p>
-
-<p><em>(Min. required Version is: 201601.7)</em></p>
-
-<pre><code>./dino.sh reload
-</code></pre>
-
-<p>To delete all docker files first use:</p>
-
-<pre><code>./dino.sh reload --force
-</code></pre>
-
-<p><strong>Update to latest init Version</strong></p>
-
-<p><em>(Min. required Version is: 201601.7)</em></p>
-
-<pre><code>./dino.sh selfupdate
-./dino.sh reload --force
-</code></pre>
-
-<p><strong>Login to docker container as ..</strong></p>
-
-<p><em>(Min. required Version is: 201601.13)</em></p>
-
-<p>.. www-data:</p>
-
-<pre><code>./dino.sh ssh
-</code></pre>
-
-<p>.. root:</p>
-
-<pre><code>./dino.sh ssh root
-</code></pre>
-
-<p><strong>Symlinks</strong></p>
-
-<p><em>(Min. required Version is: 201602.1)</em></p>
-
-<p>.. show existing symlinks:</p>
-
-<pre><code>./dino.sh links
-</code></pre>
-
-<p>.. create a symlink:</p>
-
-<pre><code>./dino.sh link www/Neos/Packages/Application
-</code></pre>
-
-<p>.. remove a symlink:</p>
-
-<pre><code>./dino.sh unlink www/Neos/Packages/Application
-</code></pre>
-
-<p><strong>Copy Files and Folders</strong></p>
-
-<p><em>(Min. required Version is: 201602.1)</em></p>
-
-<pre><code>./dino.sh copy www/Neos/Packages/Application
-</code></pre>
-
-<h2>
-<a id="run-docker" class="anchor" href="#run-docker" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Run Docker</h2>
-
-<p>if
-Load the Containers:</p>
-
-<pre><code>docker-compose up -d
-</code></pre>
-
-<p>Connect Container:</p>
-
-<pre><code>docker exec -it PROJECT_main_1 bash
-</code></pre>
-
-<p>Run Installer (if needed):</p>
-
-<pre><code>/docker/bin/run.sh
-</code></pre>
-
-<p>Open Site:</p>
-
-<pre><code>http://xyz:8000
-</code></pre>
-
-<h2>
-<a id="work-with-docker" class="anchor" href="#work-with-docker" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Work with Docker</h2>
-
-<p>Check other running Containers:</p>
-
-<pre><code>docker ps
-</code></pre>
-
-<p>Stop running Containers:</p>
-
-<pre><code>docker stop CONTAINER_NAME_OR_ID ANOTHER_CONTAINER_NAME_OR_ID
-</code></pre>
-
-<p>Delete Docker Containers:</p>
-
-<pre><code>docker rm -f CONTAINER_NAME_OR_ID ANOTHER_CONTAINER_NAME_OR_ID
-</code></pre>
-
-<p>List Docker Images:</p>
-
-<pre><code>docker images
-</code></pre>
-
-<p>Delete Docker Images:</p>
-
-<pre><code>docker rmi -f IMAGE_ID ANOTHER_IMAGE_ID
-</code></pre>
-
-<h2>
-<a id="credits" class="anchor" href="#credits" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Credits</h2>
-
-<p>Base Docker Images: webdevops/php-docker-boilerplate</p>
         </section>
 
         <aside id="sidebar">
-          <a href="https://github.com/sbruggmann/dino.sh/zipball/master" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/sbruggmann/dino.sh/tarball/master" class="button">
-            <small>Download</small>
-            .tar.gz file
-          </a>
+            <!--
+                <a href="https://github.com/sbruggmann/dino.sh/zipball/master" class="button">
+                    <small>Download</small>
+                    .zip file
+                </a>
+                <a href="https://github.com/sbruggmann/dino.sh/tarball/master" class="button">
+                    <small>Download</small>
+                    .tar.gz file
+                </a>
+            -->
 
-          <p class="repo-owner"><a href="https://github.com/sbruggmann/dino.sh"></a> is maintained by <a href="https://github.com/sbruggmann">sbruggmann</a>.</p>
+            <p>A bash helper for Docker, created for <a href="https://www.neos.io/" target="_blank">Neos</a> an <a href="https://flowframework.readthedocs.org/en/stable/" target="_blank">Flow-Framework</a> Projects.</p>
 
-          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+            <p class="repo-owner">Maintained by <a href="https://github.com/sbruggmann">sbruggmann</a>.</p>
+
+            <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
         </aside>
-      </div>
     </div>
+</div>
 
-            <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA-74055333-1");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
+<script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+    try {
+        var pageTracker = _gat._getTracker("UA-74055333-1");
+        pageTracker._trackPageview();
+    } catch (err) {
+    }
+</script>
 
-  </body>
+</body>
 </html>
