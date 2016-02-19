@@ -77,8 +77,9 @@ if [[ "$1" == "help" || "$1" == "-h" ]]; then
   echo "  -u,  selfupdate                  download the latest dino.sh"
   echo "                                   run './dino.sh reload' afterwards"
   echo " "
-  echo "       ssh                         login to docker container as www-data."
-  echo "                                   use './dino.sh ssh root' to login as root."
+  echo "       bash [root]                 login to docker container as www-data."
+  echo "                                   use './dino.sh bash root' to login as root."
+  echo "       ssh  [root]                 alias for the './dino.sh bash' command."
   echo " "
   echo "       links                       show symlinks between /docker/www and /docker/host-www"
   echo "       link {path}                 create a symlink"
@@ -226,15 +227,15 @@ if [[ "$1" == "copy" ]]; then
   exit
 fi
 
-if [[ ( "$1" == "ssh" ) && ( "$2" == "root" ) ]]; then
-  echo "dino.sh | SSH:"
+if [[ ( "$1" == "bash" || "$1" == "ssh" ) && ( "$2" == "root" ) ]]; then
+  echo "dino.sh | bash:"
   echo "dino.sh | Login as root.."
 
   docker exec -it -u root "$PROJECT_NAME$PROJECT_MAIN" bash
   printf "\n        | Welcome back on your host terminal\n"
   exit
-elif [[ "$1" == "ssh" ]]; then
-  echo "dino.sh | SSH:"
+elif [[ "$1" == "bash" || "$1" == "ssh" ]]; then
+  echo "dino.sh | bash:"
   echo "dino.sh | Login as www-data.."
 
   docker exec -it -u www-data "$PROJECT_NAME$PROJECT_MAIN" bash
