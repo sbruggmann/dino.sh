@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Docker Development init for Neos and Flow
-# version: 0.4.3
+# version: 0.4.4
 
 TIME_BEFORE=$(date +%s)
 CURRENT_VERSION="0.4.3"
@@ -259,7 +259,7 @@ if [[ ( "$1" == "satis" ) && ( "$2" == "build" ) ]]; then
   echo "dino.sh | satis:"
   echo "dino.sh | Rebuild.."
 
-  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh"
+  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh; cat /satisfy/web/packages.json > /satisfy/web/packages.json.tmp; mv /satisfy/web/packages.json.tmp /satisfy/web/packages.json"
   exit
 fi
 if [[ ( "$1" == "satis" ) ]]; then
@@ -592,7 +592,7 @@ printf "\n"
 
 if grep -q "http://satis:80" "./www/$PROJECT_TYPE/composer.json"; then
   if [ ! -f ~/.dino-composer-satis/web/index.html ]; then
-    docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh"
+    docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh; cat /satisfy/web/packages.json > /satisfy/web/packages.json.tmp; mv /satisfy/web/packages.json.tmp /satisfy/web/packages.json"
   else
     docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh"
   fi
