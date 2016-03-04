@@ -288,6 +288,11 @@ if [[ ( "$1" == "satis" ) ]]; then
   exit
 fi
 
+
+# startup dino.sh
+
+echo "dino.sh | load.."
+
 # Check dino docker patch version:
 DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
 if [[ "$CURRENT_VERSION" == "$DINO_RUN_VERSION" ]]; then
