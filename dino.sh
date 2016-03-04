@@ -259,7 +259,7 @@ if [[ ( "$1" == "satis" ) && ( "$2" == "build" ) ]]; then
   echo "dino.sh | satis:"
   echo "dino.sh | Rebuild.."
 
-  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh; cat /satisfy/web/packages.json > /satisfy/web/packages.json.tmp; mv /satisfy/web/packages.json.tmp /satisfy/web/packages.json"
+  docker-compose run --rm satis bash -c "./scripts/startup.sh && ./scripts/build.sh"
   exit
 fi
 if [[ ( "$1" == "satis" ) ]]; then
@@ -337,7 +337,7 @@ if grep -q "http://satis:80" "$BASE_PATH/www/$PROJECT_TYPE/composer.json"; then
     if [ ! -d ~/.dino-composer-satis/config ]; then
       mkdir -p ~/.dino-composer-satis/config
     fi
-    cp "$BASE_PATH/docker/satis/config.json" ~/.dino-composer-satis/config/
+    cp "$BASE_PATH/docker/satis/config/config.json" ~/.dino-composer-satis/config/
     echo  "dino.sh | Created a default satis config .."
     echo  "dino.sh | - Edit it at ~/.dino-composer-satis/config/config.json !"
   fi
@@ -592,9 +592,9 @@ printf "\n"
 
 if grep -q "http://satis:80" "./www/$PROJECT_TYPE/composer.json"; then
   if [ ! -f ~/.dino-composer-satis/web/index.html ]; then
-    docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh; cat /satisfy/web/packages.json > /satisfy/web/packages.json.tmp; mv /satisfy/web/packages.json.tmp /satisfy/web/packages.json"
+    docker-compose run --rm satis bash -c "./scripts/startup.sh && ./scripts/build.sh"
   else
-    docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh"
+    docker-compose run --rm satis bash -c "./scripts/startup.sh"
   fi
 fi
 

@@ -252,10 +252,10 @@ index 9e041db..0000000
 -
 -Did I forget anyone? Send me a tweet or create pull request!
 diff --git a/docker-compose.yml b/docker-compose.yml
-index 341261a..e6999d1 100644
+index 341261a..1a76efd 100644
 --- a/docker-compose.yml
 +++ b/docker-compose.yml
-@@ -4,31 +4,57 @@
+@@ -4,31 +4,55 @@
  main:
    build: docker/main
    #dockerfile: Ubuntu-12.04 # Ubuntu 12.04 - PHP 5.3, LTS (precise)
@@ -294,8 +294,6 @@ index 341261a..e6999d1 100644
    env_file:
 -    - docker-env.yml
 +    - docker/env.yml
-+#  extra_hosts:
-+#      - "packagist.dotpulse.ch:5.148.171.170"
 +
 +#######################################
 +# Satis
@@ -318,7 +316,7 @@ index 341261a..e6999d1 100644
  
  #######################################
  # Webserver
-@@ -38,7 +64,7 @@ web:
+@@ -38,7 +62,7 @@ web:
    dockerfile: Apache-Httpd # Apache HTTPd
    #dockerfile: Nginx       # Nginx
    ports:
@@ -327,7 +325,7 @@ index 341261a..e6999d1 100644
      - 8443:443
    links:
      - main
-@@ -46,7 +72,7 @@ web:
+@@ -46,7 +70,7 @@ web:
      - main
      - storage
    env_file:
@@ -336,7 +334,7 @@ index 341261a..e6999d1 100644
  
  #######################################
  # MySQL server
-@@ -60,7 +86,7 @@ mysql:
+@@ -60,7 +84,7 @@ mysql:
    volumes:
      - /tmp/debug/:/tmp/debug/
    env_file:
@@ -345,7 +343,7 @@ index 341261a..e6999d1 100644
  
  #######################################
  # PostgreSQL server
-@@ -72,7 +98,7 @@ mysql:
+@@ -72,7 +96,7 @@ mysql:
  #  volumes_from:
  #    - storage
  #  env_file:
@@ -354,7 +352,7 @@ index 341261a..e6999d1 100644
  
  #######################################
  # Solr server
-@@ -86,7 +112,7 @@ mysql:
+@@ -86,7 +110,7 @@ mysql:
  #  environment:
  #    - SOLR_STORAGE=/data/solr/server-master/
  #  env_file:
@@ -363,7 +361,7 @@ index 341261a..e6999d1 100644
  
  #######################################
  # Elasticsearch
-@@ -99,7 +125,7 @@ mysql:
+@@ -99,7 +123,7 @@ mysql:
  #  volumes_from:
  #    - storage
  #  env_file:
@@ -372,7 +370,7 @@ index 341261a..e6999d1 100644
  
  #######################################
  # Redis
-@@ -109,7 +135,7 @@ mysql:
+@@ -109,7 +133,7 @@ mysql:
  #  volumes_from:
  #    - storage
  #  env_file:
@@ -381,7 +379,7 @@ index 341261a..e6999d1 100644
  
  #######################################
  # Memcached
-@@ -119,17 +145,17 @@ mysql:
+@@ -119,17 +143,17 @@ mysql:
  #  volumes_from:
  #    - storage
  #  env_file:
@@ -406,7 +404,7 @@ index 341261a..e6999d1 100644
  
  #######################################
  # FTP (vsftpd)
-@@ -142,7 +168,7 @@ mysql:
+@@ -142,7 +166,7 @@ mysql:
  #    - ./:/docker/
  #    - /tmp/debug/:/tmp/debug/
  #  env_file:
@@ -1143,26 +1141,29 @@ index 4bd8471..6e82376 100755
          ;;
 diff --git a/docker/satis/Dockerfile b/docker/satis/Dockerfile
 new file mode 100644
-index 0000000..ad8daa7
+index 0000000..5603757
 --- /dev/null
 +++ b/docker/satis/Dockerfile
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,14 @@
 +FROM ypereirareis/docker-satis:4.0
 +
 +RUN apt-get update && apt-get install -y \
 +    mercurial
 +
 +ADD hgrc /etc/mercurial/hgrc
-+ADD config.php /app/config.php
-+ADD startup.sh /app/scripts/startup.sh
++ADD config/config.php /app/config.php
++ADD scripts/startup.sh /app/scripts/startup.sh
++ADD scripts/build.sh /app/scripts/build.sh
++
 +RUN chmod +x /app/scripts/startup.sh
++RUN chmod +x /app/scripts/build.sh
 +RUN rm /app/config.json
 +RUN ln -s /app/config/config.json /app/config.json
-diff --git a/docker/satis/config.json b/docker/satis/config.json
+diff --git a/docker/satis/config/config.json b/docker/satis/config/config.json
 new file mode 100644
 index 0000000..f8e291a
 --- /dev/null
-+++ b/docker/satis/config.json
++++ b/docker/satis/config/config.json
 @@ -0,0 +1,16 @@
 +{
 +  "name": "Example Private Repo",
@@ -1180,11 +1181,11 @@ index 0000000..f8e291a
 +    "skip-dev": false
 +  }
 +}
-diff --git a/docker/satis/config.php b/docker/satis/config.php
+diff --git a/docker/satis/config/config.php b/docker/satis/config/config.php
 new file mode 100644
 index 0000000..375e21f
 --- /dev/null
-+++ b/docker/satis/config.php
++++ b/docker/satis/config/config.php
 @@ -0,0 +1,62 @@
 +<?php
 +
@@ -1260,11 +1261,26 @@ index 0000000..e310c29
 +[trusted]
 +users = 1000
 \ No newline at end of file
-diff --git a/docker/satis/startup.sh b/docker/satis/startup.sh
+diff --git a/docker/satis/scripts/build.sh b/docker/satis/scripts/build.sh
+new file mode 100644
+index 0000000..d4ed788
+--- /dev/null
++++ b/docker/satis/scripts/build.sh
+@@ -0,0 +1,9 @@
++SATIS_PATH="/satisfy/vendor"
++SATIS_BIN="/satisfy/vendor/bin/satis"
++SATIS_PUBLIC="/satisfy/web/"
++
++${SATIS_BIN} -n build /app/config.json ${SATIS_PUBLIC}
++
++# bypass nginx statig file cache problems..
++cat "${SATIS_PUBLIC}packages.json" > "${SATIS_PUBLIC}packages.json.tmp";
++mv "${SATIS_PUBLIC}packages.json.tmp" "${SATIS_PUBLIC}packages.json";
+diff --git a/docker/satis/scripts/startup.sh b/docker/satis/scripts/startup.sh
 new file mode 100644
 index 0000000..d3a21e0
 --- /dev/null
-+++ b/docker/satis/startup.sh
++++ b/docker/satis/scripts/startup.sh
 @@ -0,0 +1,58 @@
 +# Reset
 +Color_Off='\033[0m'       # Text Reset
