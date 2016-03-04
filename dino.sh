@@ -105,9 +105,7 @@ if [[ "$1" == "version" || "$1" == "-v" ]]; then
     echo "dino.sh | Version: $CURRENT_VERSION"
 
     DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
-    if [[ "$CURRENT_VERSION" == "$DINO_RUN_VERSION" ]]; then
-      # echo "        | docker Patch is up to date"
-    else
+    if [[ "$CURRENT_VERSION" != "$DINO_RUN_VERSION" ]]; then
       echo "        | docker Patch is not up to date!"
       echo "        | Please update: ./dino.sh reload --force"
     fi
@@ -295,9 +293,7 @@ echo "dino.sh | load.."
 
 # Check dino docker patch version:
 DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
-if [[ "$CURRENT_VERSION" == "$DINO_RUN_VERSION" ]]; then
-  # echo "        | docker Patch is up to date"
-else
+if [[ "$CURRENT_VERSION" != "$DINO_RUN_VERSION" ]]; then
   echo "        | docker Patch is not up to date!"
   echo "        | Please update: ./dino.sh reload --force"
   exit
