@@ -1,10 +1,9 @@
 #!/bin/sh
 
 # Docker Development init for Neos and Flow
-# version: 0.4.4
 
 TIME_BEFORE=$(date +%s)
-CURRENT_VERSION="0.4.3"
+CURRENT_VERSION="0.4.4"
 
 BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
@@ -99,8 +98,13 @@ if [[ "$1" == "help" || "$1" == "-h" ]]; then
 fi
 
 if [[ "$1" == "version" || "$1" == "-v" ]]; then
-  echo "dino.sh | Version: $CURRENT_VERSION"
-  exit
+  if [[ "$2" == "tight" || "$2" == "-t" ]]; then
+    printf "$CURRENT_VERSION"
+    exit
+  else
+    echo "dino.sh | Version: $CURRENT_VERSION"
+    exit
+  fi
 fi
 
 if [[ "$1" == "settings" ]]; then
@@ -183,7 +187,7 @@ if [[ "$1" == "selfupdate" || "$1" == "-u" ]]; then
     else
       (OUTPUT=`wget --no-cache --output-document="dino.sh" https://raw.githubusercontent.com/sbruggmann/dino.sh/master/dino.sh;`) &> /dev/null & spinner $!
     fi
-    NEW_VERSION=$(echo `tail -n +4 dino.sh | head -n 1`)
+    NEW_VERSION=$(echo `./dino.sh version tight`)
 
     echo  "dino.sh | old $CURRENT_VERSION"
     echo "dino.sh | new $NEW_VERSION"
