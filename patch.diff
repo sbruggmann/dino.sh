@@ -698,10 +698,10 @@ index 0000000..ef1feb5
 +esac
 diff --git a/docker/bin/run.sh b/docker/bin/run.sh
 new file mode 100644
-index 0000000..194bf4e
+index 0000000..f1092e2
 --- /dev/null
 +++ b/docker/bin/run.sh
-@@ -0,0 +1,126 @@
+@@ -0,0 +1,170 @@
 +#!/usr/bin/env bash
 +
 +if [[ "$1" == "links" ]]; then
@@ -722,25 +722,59 @@ index 0000000..194bf4e
 +
 +    echo "dino.sh # link $2 $KEEP_DATA"
 +    if [[ "$KEEP_DATA" == "v" ]]; then
++        if [[ -h "/docker/host-$2" ]]; then
++            echo "dino.sh # Error: /docker/host-$2 is already a Symlink"
++            exit
++        fi
++
 +        if [[ -d "/docker/host-$2" || -f "/docker/host-$2" || -h "/docker/host-$2" ]]; then
 +            rm -rf "/docker/host-$2";
 +        fi
++
++        # make sure the base folder exists..
++        mkdir -p "/docker/host-$2";
++        rm -rf "/docker/host-$2";
++
 +        cp -r "/docker/$2" "/docker/host-$2";
 +    fi
 +
 +    if [[ -d "/docker/$2" || -f "/docker/$2" || -h "/docker/$2" ]]; then
 +        rm -rf "/docker/$2";
 +    fi
++
++    # make sure the base folder exists..
++    mkdir -p "/docker/$2";
++    rm -rf "/docker/$2";
++
 +    ln -s "/docker/host-$2" "/docker/$2";
 +
 +    exit;
 +fi
 +
 +if [[ "$1" == "unlink" ]]; then
-+    echo "dino.sh # unlink $2";
-+    rm -rf "/docker/$2";
-+    cp -r "/docker/host-$2" "/docker/$2";
 +
++    if [[ -h "/docker/$2" ]]; then
++        echo "dino.sh # unlink $2";
++        rm -rf "/docker/$2";
++        cp -r "/docker/host-$2" "/docker/$2";
++        echo "rm -rf /docker/$2";
++        if [[ ! -h "/docker/host-$2" ]]; then
++            echo "        # and copy data from vm to host";
++            echo "cp -r /docker/host-$2 /docker/$2";
++        fi
++        exit
++    fi
++    if [[ -h "/docker/host-$2" ]]; then
++        echo "dino.sh # unlink $2";
++        rm -rf "/docker/host-$2";
++        if [[ ! -h "/docker/$2" ]]; then
++            echo "        # and copy data from host to vm";
++            cp -r "/docker/$2" "/docker/host-$2";
++        fi
++    fi
++
++    echo "dino.sh # unlink $2";
++    echo "        # FAILD";
 +    exit;
 +fi
 +
@@ -758,13 +792,23 @@ index 0000000..194bf4e
 +        if [[ -d "/docker/$2" || -f "/docker/$2" || -h "/docker/$2" ]]; then
 +            rm -rf "/docker/$2";
 +        fi
-+        cp -r "/docker/host-$2" "/docker/$2";
++
++        # make sure the base folder exists..
++        mkdir -p "/docker/$2";
++        rm -rf "/docker/$2";
++
++        cp -Lr "/docker/host-$2" "/docker/$2";
 +    fi
 +    if [[ "$KEEP_DATA" == "v" ]]; then
 +        if [[ -d "/docker/host-$2" || -f "/docker/host-$2" || -h "/docker/host-$2" ]]; then
 +            rm -rf "/docker/host-$2";
 +        fi
-+        cp -r "/docker/$2" "/docker/host-$2";
++
++        # make sure the base folder exists..
++        mkdir -p "/docker/host-$2";
++        rm -rf "/docker/host-$2";
++
++        cp -Lr "/docker/$2" "/docker/host-$2";
 +    fi
 +
 +    exit;
@@ -828,7 +872,6 @@ index 0000000..194bf4e
 +echo "dino.sh # ERROR: No Command given.."
 +
 +exit;
-\ No newline at end of file
 diff --git a/docker/env.yml b/docker/env.yml
 new file mode 100644
 index 0000000..7190a4f
