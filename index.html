@@ -146,9 +146,20 @@
                 dino.sh satis
             </h4>
             <p>dino.sh creates a satis container for private repositories if you add the following to your composer.json file:</p>
-            <pre><code>"repositories": [
-    { "type": "vcs", "url": "http://satis:80" }
-]</code></pre>
+            <pre><code>{
+    // ..
+    "config": {
+        // ..
+        "secure-http": false
+    },
+    // ..
+    "repositories": {
+        "satis": {
+            "type": "composer",
+            "url": "http://satis:80"
+        }
+    }
+}</code></pre>
             <p>Your private repositories are cached over all projects and the configuration file is stored here:</p>
             <pre><code>~/.dino-composer-satis/config/config.json</code></pre>
 
