@@ -103,6 +103,15 @@ if [[ "$1" == "version" || "$1" == "-v" ]]; then
     exit
   else
     echo "dino.sh | Version: $CURRENT_VERSION"
+
+    DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
+    if [[ "$CURRENT_VERSION" == "$DINO_RUN_VERSION" ]]; then
+      echo "        | run.sh is ok"
+    else
+      echo "        | docker Patch is not up to date!"
+      echo "        | Please update: ./dino.sh reload --force"
+    fi
+
     exit
   fi
 fi
@@ -276,6 +285,16 @@ if [[ ( "$1" == "satis" ) ]]; then
   printf "        | Visit http://%s:3080/\n" $DOCKER_IP
   printf "        | Edit  ~/.dino-composer-satis/config/config.json\n"
   printf "\n"
+  exit
+fi
+
+# Check dino docker patch version:
+DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
+if [[ "$CURRENT_VERSION" == "$DINO_RUN_VERSION" ]]; then
+  echo "        | docker Patch is ok"
+else
+  echo "        | docker Patch is not up to date!"
+  echo "        | Please update: ./dino.sh reload --force"
   exit
 fi
 
