@@ -1,10 +1,9 @@
 #!/bin/sh
 
 # Docker Development init for Neos and Flow
-# version: 0.4.4
 
 TIME_BEFORE=$(date +%s)
-CURRENT_VERSION="0.4.3"
+CURRENT_VERSION="0.4.5"
 
 BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
@@ -37,6 +36,11 @@ fi
 #fi
 if [ -z $DINO_SETTINGS_MAIL ]; then
   DINO_SETTINGS_MAIL="disabled"
+fi
+if grep -q "http://satis:80" "./www/$PROJECT_TYPE/composer.json"; then
+  DINO_SETTINGS_SATIS="enabled"
+else
+  DINO_SETTINGS_SATIS="disabled"
 fi
 
 spinner()
@@ -94,8 +98,22 @@ if [[ "$1" == "help" || "$1" == "-h" ]]; then
 fi
 
 if [[ "$1" == "version" || "$1" == "-v" ]]; then
-  echo "dino.sh | Version: $CURRENT_VERSION"
-  exit
+  if [[ "$2" == "tight" || "$2" == "-t" ]]; then
+    printf "$CURRENT_VERSION"
+    exit
+  else
+    echo "dino.sh | Version: $CURRENT_VERSION"
+
+    DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
+    if [[ "$CURRENT_VERSION" == "$DINO_RUN_VERSION" ]]; then
+      # echo "        | docker Patch is up to date"
+    else
+      echo "        | docker Patch is not up to date!"
+      echo "        | Please update: ./dino.sh reload --force"
+    fi
+
+    exit
+  fi
 fi
 
 if [[ "$1" == "settings" ]]; then
@@ -178,7 +196,7 @@ if [[ "$1" == "selfupdate" || "$1" == "-u" ]]; then
     else
       (OUTPUT=`wget --no-cache --output-document="dino.sh" https://raw.githubusercontent.com/sbruggmann/dino.sh/master/dino.sh;`) &> /dev/null & spinner $!
     fi
-    NEW_VERSION=$(echo `tail -n +4 dino.sh | head -n 1`)
+    NEW_VERSION=$(echo `./dino.sh version tight`)
 
     echo  "dino.sh | old $CURRENT_VERSION"
     echo "dino.sh | new $NEW_VERSION"
@@ -259,7 +277,7 @@ if [[ ( "$1" == "satis" ) && ( "$2" == "build" ) ]]; then
   echo "dino.sh | satis:"
   echo "dino.sh | Rebuild.."
 
-  docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh; cat /satisfy/web/packages.json > /satisfy/web/packages.json.tmp; mv /satisfy/web/packages.json.tmp /satisfy/web/packages.json"
+  docker-compose run --rm satis bash -c "./scripts/startup.sh && ./scripts/build.sh"
   exit
 fi
 if [[ ( "$1" == "satis" ) ]]; then
@@ -267,6 +285,21 @@ if [[ ( "$1" == "satis" ) ]]; then
   printf "        | Visit http://%s:3080/\n" $DOCKER_IP
   printf "        | Edit  ~/.dino-composer-satis/config/config.json\n"
   printf "\n"
+  exit
+fi
+
+
+# startup dino.sh
+
+echo "dino.sh | load.."
+
+# Check dino docker patch version:
+DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
+if [[ "$CURRENT_VERSION" == "$DINO_RUN_VERSION" ]]; then
+  # echo "        | docker Patch is up to date"
+else
+  echo "        | docker Patch is not up to date!"
+  echo "        | Please update: ./dino.sh reload --force"
   exit
 fi
 
@@ -323,7 +356,7 @@ if [ ! -d ./docker/ ]; then
 
 fi
 
-if grep -q "http://satis:80" "$BASE_PATH/www/$PROJECT_TYPE/composer.json"; then
+if [[ "$DINO_SETTINGS_SATIS" == "enabled" ]]; then
   echo  "dino.sh | Enable satis container.."
   sed 's/#satis-disabled //g' docker-compose.yml > docker-compose.yml.tmp && mv docker-compose.yml.tmp docker-compose.yml
 
@@ -337,7 +370,7 @@ if grep -q "http://satis:80" "$BASE_PATH/www/$PROJECT_TYPE/composer.json"; then
     if [ ! -d ~/.dino-composer-satis/config ]; then
       mkdir -p ~/.dino-composer-satis/config
     fi
-    cp "$BASE_PATH/docker/satis/config.json" ~/.dino-composer-satis/config/
+    cp "$BASE_PATH/docker/satis/config/config.json" ~/.dino-composer-satis/config/
     echo  "dino.sh | Created a default satis config .."
     echo  "dino.sh | - Edit it at ~/.dino-composer-satis/config/config.json !"
   fi
@@ -590,11 +623,11 @@ TIME_BEFORE_NEOS=$(date +%s)
 
 printf "\n"
 
-if grep -q "http://satis:80" "./www/$PROJECT_TYPE/composer.json"; then
+if [[ "$DINO_SETTINGS_SATIS" == "enabled" ]]; then
   if [ ! -f ~/.dino-composer-satis/web/index.html ]; then
-    docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh && ./scripts/build.sh; cat /satisfy/web/packages.json > /satisfy/web/packages.json.tmp; mv /satisfy/web/packages.json.tmp /satisfy/web/packages.json"
+    docker-compose run --rm satis bash -c "./scripts/startup.sh && ./scripts/build.sh"
   else
-    docker-compose run --rm satis bash -c "cat /app/config.json && ./scripts/startup.sh"
+    docker-compose run --rm satis bash -c "./scripts/startup.sh"
   fi
 fi
 
@@ -649,5 +682,9 @@ printf "        |                          ./dino.sh ssh root       docker exec 
 printf "        | 2. Add to /etc/hosts:    %s %s.dev www.%s.dev %s.prod www.%s.prod\n" $DOCKER_IP $DOMAIN_NAME $DOMAIN_NAME $DOMAIN_NAME $DOMAIN_NAME
 printf "        | 3. Open Site:            http://%s.dev\n" $DOMAIN_NAME
 printf "        |                          http://%s.prod\n" $DOMAIN_NAME
-echo "        | 4. Stop Docker:          docker-compose stop"
+if [[ "$DINO_SETTINGS_SATIS" == "enabled" ]]; then
+  printf "        | 4. Show Satis Packages:  http://%s:3080/\n" $DOCKER_IP
+  printf "        |                          Edit ~/.dino-composer-satis/config/config.json\n"
+fi
+echo "        |    Stop Docker:          docker-compose stop"
 printf "\n\n\n"
