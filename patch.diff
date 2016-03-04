@@ -1,3 +1,601 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+deleted file mode 100644
+index e5d7448..0000000
+--- a/CHANGELOG.md
++++ /dev/null
+@@ -1,81 +0,0 @@
+-PHP Docker Boilerplate Changelog
+-==================================
+-
+-4.0.0 - 2015-08-17
+-------------------
+-- Seperated TYPO3 Docker Boilerplate and PHP Docker Boilerplate
+-- Switched to Ansible provisioning (playbook)
+-- Added multiple Ubuntu versions
+-- Added CentOS
+-- Added Ubuntu with HHVM
+-- Added development/production context
+-- Added blackfire.io
+-- Added possiblity to disable Xdebug and Blackfire
+-- Moved php.ini to `etc/php/development.ini` and `etc/php/production.ini`
+-- Added ssh key/config (`etc/ssh`) setting for `/home/.ssh/`
+-- Added possibility to use `supervisorctl` (only for root)
+-- Improved provisioning
+-- Refactored layout
+-- Added prebuilt Docker images
+-
+-3.5.0 - 2015-06-23
+------------------------
+-- Added `ftp` container (with vsftpd)
+-- Added `postgres` container (with PostgreSQL)
+-- Enabled php module `mcrypt` by default
+-- Improved documentation
+-
+-3.4.0 - 2015-06-15
+--------------------------------------
+-- Renamed `PHP_UID` and `PHP_GID` to `EFFECTIVE_UID` and `EFFECTIVE_GID`
+-- Set Apache HTTPd and Nginx UID to `EFFECTIVE_UID` and `EFFECTIVE_GID`
+-- Renamed `make deploy` to `make build` (was confusing)
+-- Fixed MySQL default charset (set to utf8)
+-- Added `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_USER`, `MYSQL_ROOT_PASSWORD` and `MYSQL_DATABASE` for nginx/apache/php-fpm
+-- Improved customization of `php.ini`
+-- Improved documentation
+-- Added php memcache and memcached
+-
+-3.3.1 - 2015-05-11
+--------------------------------------
+-- Fixed ssl certificate
+-
+-3.3.0 - 2015-05-09 - t3cs2015 release
+--------------------------------------
+-- Fixed `make mysql-backup`
+-- Added `docker/main/bin/customization.sh` for easy customization and faster docker rebuilding
+-- Added `CLI_USER` for customizable user in `docker-env.yml` (for `CLI_SCRIPT`)
+-- Added ssl (SHA2) for nginx and apache HTTPd
+-- Added `/data/cache` for application cache storage (inside `storage` container)
+-- Improved `make deploy` (supports all other frameworks now, not only TYPO3)
+-- Fixed $HOME variable for shell and cli entrypoint targets (sudo issue)
+-- Improved `docker-env.yml` layout with some examples
+-
+-3.2.0 - 2015-04-26
+-------------------
+-- Added `mailcatcher` container
+-- Added `cli` target for entrypoint in `main` container
+-- Smaller improvements
+-
+-3.0.0 - 2015-04-19
+-------------------
+-- Added customizeable `PHP_UID` and `PHP_GID` (for www-data user) in `docker-env.yml`
+-- Added `PHP_TIMEZONE` in `docker-env.yml`
+-- Added advanced logging for php (see docker-compose logs for access, slowlog and errorlog)
+-- Added capability for PHP-FPM to trace for slowlog
+-- Added possibility to reach webserver from php-container (with dnsmasq) eg. for indexing tasks
+-- Readded xdebug
+-- Improved configuration
+-- Improved database backup
+-- Improved container layout
+-
+-2.1.0 - 2015-04-01
+-------------------
+-- Added customizeable `DOCUMENT_INDEX` in `docker-env.yml`
+-
+-2.0.0 - 2015-03-31
+-------------------
+-- Added customizeable `DOCUMENT_ROOT` in `docker-env.yml`
+-- Switched to official nginx
+-- Moved `/code/` to `/docker`
+-- Fixed some bugs
+diff --git a/LICENSE b/LICENSE
+deleted file mode 100644
+index db98ff0..0000000
+--- a/LICENSE
++++ /dev/null
+@@ -1,21 +0,0 @@
+-The MIT License (MIT)
+-
+-Copyright (c) 2015 Markus Blaschke
+-
+-Permission is hereby granted, free of charge, to any person obtaining a copy
+-of this software and associated documentation files (the "Software"), to deal
+-in the Software without restriction, including without limitation the rights
+-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-copies of the Software, and to permit persons to whom the Software is
+-furnished to do so, subject to the following conditions:
+-
+-The above copyright notice and this permission notice shall be included in all
+-copies or substantial portions of the Software.
+-
+-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-SOFTWARE.
+\ No newline at end of file
+diff --git a/Makefile b/Makefile
+deleted file mode 100644
+index 83c2a6b..0000000
+--- a/Makefile
++++ /dev/null
+@@ -1,66 +0,0 @@
+-ARGS = $(filter-out $@,$(MAKECMDGOALS))
+-
+-all: build
+-
+-#############################
+-# Create new project
+-#############################
+-
+-create:
+-	bash bin/create-project.sh $(ARGS)
+-
+-#############################
+-# MySQL
+-#############################
+-
+-mysql-backup:
+-	docker-compose run --rm --no-deps main root bash /docker/bin/backup.sh mysql
+-
+-mysql-restore:
+-	docker-compose run --rm --no-deps main root bash /docker/bin/restore.sh mysql
+-
+-#############################
+-# Solr
+-#############################
+-
+-solr-backup:
+-	docker-compose stop solr
+-	docker-compose run --rm --no-deps main root bash /docker/bin/backup.sh solr
+-	docker-compose start solr
+-
+-solr-restore:
+-	docker-compose stop solr
+-	docker-compose run --rm --no-deps main root bash /docker/bin/restore.sh solr
+-	docker-compose start solr
+-
+-#############################
+-# General
+-#############################
+-
+-backup:  mysql-backup  solr-backup
+-restore: mysql-restore solr-restore
+-
+-build:
+-	bash bin/build.sh
+-
+-clean:
+-	test -d code/typo3temp && { rm -rf code/typo3temp/*; }
+-
+-bash:
+-	docker-compose run --rm main bash
+-
+-root:
+-	docker-compose run --rm main root
+-
+-#############################
+-# TYPO3
+-#############################
+-
+-scheduler:
+-	docker-compose run --rm main typo3/cli_dispatch.phpsh scheduler $(ARGS)
+-
+-#############################
+-# Argument fix workaround
+-#############################
+-%:
+-	@:
+diff --git a/README.md b/README.md
+deleted file mode 100644
+index 9e041db..0000000
+--- a/README.md
++++ /dev/null
+@@ -1,60 +0,0 @@
+-# Dockerized PHP web project boilerplate
+-
+-[![latest v4.0.0](https://img.shields.io/badge/latest-v4.0.0-green.svg?style=flat)](https://github.com/webdevops/php-docker-boilerplate/releases/tag/4.0.0)
+-![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)
+-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/mblaschke/php-docker-boilerplate.svg)](http://isitmaintained.com/project/mblaschke/php-docker-boilerplate "Average time to resolve an issue")
+-[![Percentage of issues still open](http://isitmaintained.com/badge/open/mblaschke/php-docker-boilerplate.svg)](http://isitmaintained.com/project/mblaschke/php-docker-boilerplate "Percentage of issues still open")
+-
+-This is an easy customizable docker boilerplate for any PHP based projects like _Symfony Framework_, _CakePHP_, _Yii_ and many other frameworks or applications.
+-
+-Supports:
+-
+-- Nginx or Apache HTTPd
+-- PHP-FPM (with Xdebug)
+-- MySQL, MariaDB or PerconaDB
+-- PostgreSQL
+-- Solr (disabled, without configuration)
+-- Elasticsearch (disabled, without configuration)
+-- Redis (disabled)
+-- Memcached (disabled)
+-- Mailcatcher (if no mail sandbox is used, eg. [Vagrant Development VM](https://github.com/mblaschke/vagrant-development))
+-- FTP server (vsftpd)
+-- maybe more later...
+-
+-This Docker boilerplate based on the best practises and don't use too much magic.
+-Configuration of each docker container is available in the `docker/` directory - feel free to customize.
+-
+-This boilerplate can also be used for any other web project eg. Symfony, CakePHP, Magento and more.
+-Just customize the makefile for your needs
+-
+-Warning: There may be issues when using it in production - if you have any success stories please contact me.
+-
+-You can use my [Vagrant Development VM](https://github.com/mblaschke/vagrant-development) for this Docker boilerplate, eg. for easy creating new boilerplate installations with an easy shell command: `ct docker:create directory`
+-
+-## Table of contents
+-
+-- [Installation and requirements](/documentation/INSTALL.md)
+-- [Updating docker boilerplate](/documentation/UPDATE.md)
+-- [Customizing](/documentation/CUSTOMIZE.md)
+-- [Services (Webserver, MySQL... Ports, Users, Passwords)](/documentation/SERVICES.md)
+-- [Docker Quickstart](/documentation/DOCKER-QUICKSTART.md)
+-- [Run your project](/documentation/DOCKER-STARTUP.md)
+-- [Container detail info](/documentation/DOCKER-INFO.md)
+-- [Troubleshooting](/documentation/TROUBLESHOOTING.md)
+-- [Changelog](/CHANGELOG.md)
+-
+-## Credits
+-
+-This Docker layout is based on https://github.com/denderello/symfony-docker-example/
+-
+-Thanks for support, ideas and issues ...
+-- [Ingo Pfennigstorf](https://github.com/ipf)
+-- [Florian Tatzel](https://github.com/PanadeEdu)
+-- [Josef Florian Glatz](https://github.com/jousch)
+-- [Ingo Müller](https://github.com/IngoMueller)
+-- [Benjamin Rau](https://twitter.com/benjamin_rau)
+-- [Philipp Kitzberger](https://github.com/Kitzberger)
+-
+-Thanks to [cron IT GmbH](http://www.cron.eu/) for inspiration.
+-
+-Did I forget anyone? Send me a tweet or create pull request!
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 341261a..1a76efd 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -4,31 +4,55 @@
+ main:
+   build: docker/main
+   #dockerfile: Ubuntu-12.04 # Ubuntu 12.04 - PHP 5.3, LTS (precise)
+-  dockerfile: Ubuntu-14.04  # Ubuntu 14.04 - PHP 5.5, LTS (trusty)
++  #dockerfile: Ubuntu-14.04  # Ubuntu 14.04 - PHP 5.5, LTS (trusty)
+   #dockerfile: Ubuntu-15.04 # Ubuntu 15.04 - PHP 5.6 (vivid)
+-  #dockerfile: Ubuntu-15.10 # Ubuntu 15.10 - PHP 5.6 (wily)
++  dockerfile: Ubuntu-15.10 # Ubuntu 15.10 - PHP 5.6 (wily)
+   #dockerfile: Ubuntu-HHVM  # Ubuntu 14.04 - HHVM (trusty)
+   #dockerfile: Centos-7     # CentOS 7     - PHP 5.4
+   links:
+     - mysql
+     #- postgres
+-    #- mail
++    #mail-disabled - mail
+     #- solr
+     #- elasticsearch
+     #- redis
+     #- memcached
+     #- ftp
++    #satis-disabled - satis
+   volumes:
+-    - ./:/docker/
++    - ./docker/backup:/docker/backup
++    - ./docker/bin:/docker/bin
++    - ./docker/etc:/docker/etc
++    - ./www:/docker/host-www
+     - /tmp/debug/:/tmp/debug/
+   volumes_from:
+     - storage
++    #satis-disabled - satis
+   # cap and privileged needed for slowlog
+   cap_add:
+     - SYS_PTRACE
+   privileged: true
+   env_file:
+-    - docker-env.yml
++    - docker/env.yml
++
++#######################################
++# Satis
++#######################################
++#satis-disabled satis:
++#satis-disabled   build: docker/satis
++#satis-disabled   hostname: satis
++#satis-disabled   environment:
++#satis-disabled     CRONTAB_FREQUENCY: "*/30 * * * *"
++#satis-disabled     PRIVATE_REPO_DOMAIN_LIST: bitbucket.org gitlab.com github.com
++#satis-disabled     VIRTUAL_HOST: satis.localhost
++#satis-disabled   volumes:
++#satis-disabled     - "~/.ssh/id_rsa:/var/tmp/id"
++#satis-disabled     - "~/.dino-composer-satis/config/:/app/config/"
++#satis-disabled     - "~/.dino-composer-satis/cache/:/root/.composer/"
++#satis-disabled     - "~/.dino-composer-satis/web/:/satisfy/web/"
++#satis-disabled   ports:
++#satis-disabled     - 3000:3000
++#satis-disabled     - 3080:80
+ 
+ #######################################
+ # Webserver
+@@ -38,7 +62,7 @@ web:
+   dockerfile: Apache-Httpd # Apache HTTPd
+   #dockerfile: Nginx       # Nginx
+   ports:
+-    - 8000:80
++    - 80:80
+     - 8443:443
+   links:
+     - main
+@@ -46,7 +70,7 @@ web:
+     - main
+     - storage
+   env_file:
+-    - docker-env.yml
++    - docker/env.yml
+ 
+ #######################################
+ # MySQL server
+@@ -60,7 +84,7 @@ mysql:
+   volumes:
+     - /tmp/debug/:/tmp/debug/
+   env_file:
+-    - docker-env.yml
++    - docker/env.yml
+ 
+ #######################################
+ # PostgreSQL server
+@@ -72,7 +96,7 @@ mysql:
+ #  volumes_from:
+ #    - storage
+ #  env_file:
+-#    - docker-env.yml
++#    - docker/env.yml
+ 
+ #######################################
+ # Solr server
+@@ -86,7 +110,7 @@ mysql:
+ #  environment:
+ #    - SOLR_STORAGE=/data/solr/server-master/
+ #  env_file:
+-#    - docker-env.yml
++#    - docker/env.yml
+ 
+ #######################################
+ # Elasticsearch
+@@ -99,7 +123,7 @@ mysql:
+ #  volumes_from:
+ #    - storage
+ #  env_file:
+-#    - docker-env.yml
++#    - docker/env.yml
+ 
+ #######################################
+ # Redis
+@@ -109,7 +133,7 @@ mysql:
+ #  volumes_from:
+ #    - storage
+ #  env_file:
+-#    - docker-env.yml
++#    - docker/env.yml
+ 
+ #######################################
+ # Memcached
+@@ -119,17 +143,17 @@ mysql:
+ #  volumes_from:
+ #    - storage
+ #  env_file:
+-#    - docker-env.yml
++#    - docker/env.yml
+ 
+ #######################################
+ # Mailcatcher
+ #######################################
+-#mail:
+-#  build: docker/mail/
+-#  ports:
+-#    - 1080:1080
+-#  env_file:
+-#    - docker-env.yml
++#mail-disabled mail:
++#mail-disabled   build: docker/mail/
++#mail-disabled   ports:
++#mail-disabled     - 1080:1080
++#mail-disabled   env_file:
++#mail-disabled     - docker/env.yml
+ 
+ #######################################
+ # FTP (vsftpd)
+@@ -142,7 +166,7 @@ mysql:
+ #    - ./:/docker/
+ #    - /tmp/debug/:/tmp/debug/
+ #  env_file:
+-#    - docker-env.yml
++#    - docker/env.yml
+ 
+ #######################################
+ # Storage
+diff --git a/docker/bin/.config.sh b/docker/bin/.config.sh
+new file mode 100644
+index 0000000..c53c4a3
+--- /dev/null
++++ b/docker/bin/.config.sh
+@@ -0,0 +1,54 @@
++#!/usr/bin/env bash
++
++set -o pipefail  # trace ERR through pipes
++set -o errtrace  # trace ERR through 'time command' and other functions
++set -o nounset   ## set -u : exit the script if you try to use an uninitialised variable
++set -o errexit   ## set -e : exit the script if any statement returns a non-true return value
++
++
++#######################################
++## Configuration
++#######################################
++
++READLINK='readlink'
++unamestr=`uname`
++if [ "$unamestr" == 'FreeBSD' -o "$unamestr" == 'Darwin'  ]; then
++  READLINK='greadlink'
++fi
++
++if [ -z "`which $READLINK`" ]; then
++    echo "[ERROR] $READLINK not installed"
++    echo "        make sure coreutils are installed"
++    echo "        MacOS: brew install coreutils"
++    exit 1
++fi
++
++SCRIPT_DIR=$(dirname $($READLINK -f "$0"))
++ROOT_DIR=$($READLINK -f "$SCRIPT_DIR/../")
++CODE_DIR=$($READLINK -f "$ROOT_DIR/www")
++
++BACKUP_DIR=$($READLINK -f "$ROOT_DIR/backup")
++BACKUP_SOLR_FILE='solr.cores.tbz2'
++BACKUP_MYSQL_FILE='mysql.sql.bz2'
++
++#######################################
++## Functions
++#######################################
++
++errorMsg() {
++    echo "[ERROR] $*"
++}
++
++logMsg() {
++    echo " * $*"
++}
++
++sectionHeader() {
++    echo "*** $* ***"
++}
++
++execInDir() {
++    echo "[RUN :: $1] $2"
++
++    sh -c "cd \"$1\" && $2"
++}
+diff --git a/docker/bin/backup.sh b/docker/bin/backup.sh
+new file mode 100644
+index 0000000..be52d87
+--- /dev/null
++++ b/docker/bin/backup.sh
+@@ -0,0 +1,43 @@
++#!/usr/bin/env bash
++
++set -o pipefail  # trace ERR through pipes
++set -o errtrace  # trace ERR through 'time command' and other functions
++set -o nounset   ## set -u : exit the script if you try to use an uninitialised variable
++set -o errexit   ## set -e : exit the script if any statement returns a non-true return value
++
++source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.config.sh"
++
++if [ "$#" -ne 1 ]; then
++    echo "No type defined"
++    exit 1
++fi
++
++mkdir -p -- "${BACKUP_DIR}"
++
++case "$1" in
++    ###################################
++    ## MySQL
++    ###################################
++    "mysql")
++        if [ -f "${BACKUP_DIR}/${BACKUP_MYSQL_FILE}" ]; then
++            logMsg "Removing old backup file..."
++            rm -f -- "${BACKUP_DIR}/${BACKUP_MYSQL_FILE}"
++        fi
++
++        logMsg "Starting MySQL backup..."
++        mysqldump --opt --single-transaction --events --all-databases | bzip2 > "${BACKUP_DIR}/${BACKUP_MYSQL_FILE}"
++        ;;
++
++    ###################################
++    ## Solr
++    ###################################
++    "solr")
++        if [ -f "${BACKUP_DIR}/${BACKUP_SOLR_FILE}" ]; then
++            logMsg "Removing old backup file..."
++            rm -f -- "${BACKUP_DIR}/${BACKUP_SOLR_FILE}"
++        fi
++
++        logMsg "Starting Solr backup..."
++        tar jcPf "${BACKUP_DIR}/${BACKUP_SOLR_FILE}" /data/solr/
++        ;;
++esac
+diff --git a/docker/bin/build.sh b/docker/bin/build.sh
+new file mode 100644
+index 0000000..0e7c7bf
+--- /dev/null
++++ b/docker/bin/build.sh
+@@ -0,0 +1,68 @@
++#!/usr/bin/env bash
++
++set -o pipefail  # trace ERR through pipes
++set -o errtrace  # trace ERR through 'time command' and other functions
++set -o nounset   ## set -u : exit the script if you try to use an uninitialised variable
++set -o errexit   ## set -e : exit the script if any statement returns a non-true return value
++
++source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.config.sh"
++
++function excludeFilter {
++    cat | grep -v -E -e '(/Packages/|/Data/|/vendor/)'
++}
++
++#######################################
++## Composer
++#######################################
++
++sectionHeader "Checking for composer.json ..."
++
++find "$CODE_DIR" -type f -name 'composer.json' | excludeFilter | while read FILE; do
++    COMPOSER_JSON_DIR=$(dirname $($READLINK -f "$FILE"))
++
++    execInDir "$COMPOSER_JSON_DIR" "composer install --no-dev --no-interaction"
++done
++
++
++#######################################
++## Bower
++#######################################
++
++sectionHeader "Checking for bower.json ..."
++
++find "$CODE_DIR" -type f -name 'bower.json' | excludeFilter | while read FILE; do
++    BOWER_JSON_DIR=$(dirname $($READLINK -f "$FILE"))
++
++    execInDir "$BOWER_JSON_DIR" "bower install --silent"
++done
++
++
++#######################################
++## NPM
++#######################################
++
++sectionHeader "Checking for package.json (npm) ..."
++
++find "$CODE_DIR" -type f -name 'package.json' | excludeFilter | while read FILE; do
++    PACKAGE_JSON_DIR=$(dirname $($READLINK -f "$FILE"))
++
++    if [ ! -d "$PACKAGE_JSON_DIR/node_modules/" -a -n "`which npm-cache`" ]; then
++        # Install via npm-cache
++        execInDir "$PACKAGE_JSON_DIR" "npm-cache install"
++    else
++        # Install via npm
++        execInDir "$PACKAGE_JSON_DIR" "npm install"
++    fi
++done
++
++#######################################
++## Gulp
++#######################################
++
++sectionHeader "Checking for gulpfile.js ..."
++
++find "$CODE_DIR" -type f -name 'package.json' | excludeFilter | while read FILE; do
++    GULPFILE_DIR=$(dirname $($READLINK -f "$FILE"))
++
++    execInDir "$GULPFILE_DIR" "gulp deploy"
++done
 diff --git a/docker/bin/create-project.sh b/docker/bin/create-project.sh
 new file mode 100644
 index 0000000..e350975
@@ -47,3 +645,1285 @@ index 0000000..e350975
 +
 +touch -- "$CODE_DIR/.gitkeep"
 \ No newline at end of file
+diff --git a/docker/bin/restore.sh b/docker/bin/restore.sh
+new file mode 100644
+index 0000000..ef1feb5
+--- /dev/null
++++ b/docker/bin/restore.sh
+@@ -0,0 +1,45 @@
++#!/usr/bin/env bash
++
++set -o pipefail  # trace ERR through pipes
++set -o errtrace  # trace ERR through 'time command' and other functions
++set -o nounset   ## set -u : exit the script if you try to use an uninitialised variable
++set -o errexit   ## set -e : exit the script if any statement returns a non-true return value
++
++source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.config.sh"
++
++if [ "$#" -ne 1 ]; then
++    echo "No type defined"
++    exit 1
++fi
++
++mkdir -p -- "${BACKUP_DIR}"
++
++case "$1" in
++    ###################################
++    ## MySQL
++    ###################################
++    "mysql")
++        if [ -f "${BACKUP_DIR}/${BACKUP_MYSQL_FILE}" ]; then
++            logMsg "Starting MySQL restore..."
++            bzcat "${BACKUP_DIR}/${BACKUP_MYSQL_FILE}" | mysql
++        else
++            errorMsg "MySQL backup file not found"
++            exit 1
++        fi
++        ;;
++
++    ###################################
++    ## Solr
++    ###################################
++    "solr")
++        if [ -f "${BACKUP_DIR}/${BACKUP_SOLR_FILE}" ]; then
++            logMsg "Starting Solr restore..."
++            rm -rf /data/solr/* && mkdir -p /data/solr/
++            chmod 777 /data/solr/
++            tar jxPf "${BACKUP_DIR}/${BACKUP_SOLR_FILE}" -C /
++        else
++            errorMsg "Solr backup file not found"
++            exit 1
++        fi
++        ;;
++esac
+diff --git a/docker/bin/run.sh b/docker/bin/run.sh
+new file mode 100644
+index 0000000..962da8b
+--- /dev/null
++++ b/docker/bin/run.sh
+@@ -0,0 +1,182 @@
++#!/usr/bin/env bash
++
++CURRENT_VERSION="0.4.5"
++
++if [[ "$1" == "version" || "$1" == "-v" ]]; then
++  if [[ "$2" == "tight" || "$2" == "-t" ]]; then
++    printf "$CURRENT_VERSION"
++    exit
++  else
++    echo "dino.sh # Version: $CURRENT_VERSION"
++    exit
++  fi
++fi
++
++if [[ "$1" == "links" ]]; then
++    echo "dino.sh # links"
++    ls -lR /docker/www/ | grep ^l.*host\-;
++
++    exit;
++fi
++
++if [[ "$1" == "link" ]]; then
++    if [[ -z "$3" ]]; then
++        echo "Enter [h] to keep host data,"
++        echo -n "   or [v] to keep vm data: "
++        read KEEP_DATA
++    else
++        KEEP_DATA="$3"
++    fi
++
++    echo "dino.sh # link $2 $KEEP_DATA"
++    if [[ "$KEEP_DATA" == "v" ]]; then
++        if [[ -h "/docker/host-$2" ]]; then
++            echo "dino.sh # Error: /docker/host-$2 is already a Symlink"
++            exit
++        fi
++
++        if [[ -d "/docker/host-$2" || -f "/docker/host-$2" || -h "/docker/host-$2" ]]; then
++            rm -rf "/docker/host-$2";
++        fi
++
++        # make sure the base folder exists..
++        mkdir -p "/docker/host-$2";
++        rm -rf "/docker/host-$2";
++
++        cp -r "/docker/$2" "/docker/host-$2";
++    fi
++
++    if [[ -d "/docker/$2" || -f "/docker/$2" || -h "/docker/$2" ]]; then
++        rm -rf "/docker/$2";
++    fi
++
++    # make sure the base folder exists..
++    mkdir -p "/docker/$2";
++    rm -rf "/docker/$2";
++
++    ln -s "/docker/host-$2" "/docker/$2";
++
++    exit;
++fi
++
++if [[ "$1" == "unlink" ]]; then
++
++    if [[ -h "/docker/$2" ]]; then
++        echo "dino.sh # unlink $2";
++        rm -rf "/docker/$2";
++        cp -r "/docker/host-$2" "/docker/$2";
++        echo "rm -rf /docker/$2";
++        if [[ ! -h "/docker/host-$2" ]]; then
++            echo "        # and copy data from vm to host";
++            echo "cp -r /docker/host-$2 /docker/$2";
++        fi
++        exit
++    fi
++    if [[ -h "/docker/host-$2" ]]; then
++        echo "dino.sh # unlink $2";
++        rm -rf "/docker/host-$2";
++        if [[ ! -h "/docker/$2" ]]; then
++            echo "        # and copy data from host to vm";
++            cp -r "/docker/$2" "/docker/host-$2";
++        fi
++    fi
++
++    echo "dino.sh # unlink $2";
++    echo "        # FAILD";
++    exit;
++fi
++
++if [[ "$1" == "copy" ]]; then
++    if [[ -z "$3" ]]; then
++        echo "Enter [h] to copy from host to vm,"
++        echo -n "   or [v] to copy from vm to host: "
++        read KEEP_DATA
++    else
++        KEEP_DATA="$3"
++    fi
++
++    echo "dino.sh # copy $2 $KEEP_DATA";
++    if [[ "$KEEP_DATA" == "h" ]]; then
++        if [[ -d "/docker/$2" || -f "/docker/$2" || -h "/docker/$2" ]]; then
++            rm -rf "/docker/$2";
++        fi
++
++        # make sure the base folder exists..
++        mkdir -p "/docker/$2";
++        rm -rf "/docker/$2";
++
++        cp -Lr "/docker/host-$2" "/docker/$2";
++    fi
++    if [[ "$KEEP_DATA" == "v" ]]; then
++        if [[ -d "/docker/host-$2" || -f "/docker/host-$2" || -h "/docker/host-$2" ]]; then
++            rm -rf "/docker/host-$2";
++        fi
++
++        # make sure the base folder exists..
++        mkdir -p "/docker/host-$2";
++        rm -rf "/docker/host-$2";
++
++        cp -Lr "/docker/$2" "/docker/host-$2";
++    fi
++
++    exit;
++fi
++
++if [[ "$1" == "create" && "$2" == "folder" ]]; then
++    echo "dino.sh # create $2 $3"
++    if [[ ! -d "/docker/$3" ]]; then
++        mkdir -p "/docker/$3"
++    fi
++
++    exit;
++fi
++
++if [[ "$1" == "remove" && "$2" == "folder" ]]; then
++    echo "dino.sh # remove $2 $3"
++    if [[ -d "/docker/$3" ]]; then
++        rm -rf "/docker/$3"
++    fi
++
++    exit;
++fi
++
++# default initial actions...
++
++if [[ "$1" == "install" && ! -z "$2" ]]; then
++    echo "dino.sh # install $2"
++
++    echo "dino.sh # fix terminal.."
++    export TERM=xterm
++    echo "export TERM=xterm" >> /etc/bash.bashrc
++    echo "alias ls='ls --color=auto'" >> /etc/bash.bashrc
++    echo "alias ll='ls -l'" >> /etc/bash.bashrc
++
++    cd "/docker/www/$2/";
++
++    echo "dino.sh # fix file permissions..";
++    chown -R www-data:www-data ./;
++
++    su www-data -c 'composer config -g github-oauth.github.com `cat /docker/bin/.github_token`'
++
++    echo "dino.sh # composer install:";
++    printf "          "; su www-data -c 'composer install --prefer-dist --optimize-autoloader'
++    printf "\n"
++
++    echo "dino.sh # doctrine migrate:";
++    printf "          "; su www-data -c "/docker/www/$2/flow doctrine:migrate"
++    printf "\n"
++
++    echo "dino.sh # flush cache & warmup:";
++    printf "          "; su www-data -c "/docker/www/$2/flow flow:cache:flush"
++    printf "          "; su www-data -c "/docker/www/$2/flow cache:warmup"
++    printf "\n"
++
++    echo "dino.sh # fix file permissions..";
++    chown -R www-data:www-data "/docker/www/$2";
++
++    exit;
++fi
++
++echo "dino.sh # ERROR: No Command given.."
++
++exit;
+diff --git a/docker/env.yml b/docker/env.yml
+new file mode 100644
+index 0000000..7190a4f
+--- /dev/null
++++ b/docker/env.yml
+@@ -0,0 +1,90 @@
++#######################################
++# Environment Configuration
++#  - feel free to edit -
++# -> for most changes you only have to
++#         docker-compose up -d
++#    to apply them
++#######################################
++
++#######################################
++# Webserver
++
++# General
++DOCUMENT_ROOT=www/public/
++DOCUMENT_INDEX=index.php
++CLI_SCRIPT=php index.php
++
++# Symfony
++# DOCUMENT_ROOT=code/web/
++# DOCUMENT_INDEX=app_dev.php
++# CLI_SCRIPT=php app/console
++
++#######################################
++# Context environment
++
++# Symfony
++SYMFONY_ENV=dev
++SYMFONY_DEBUG=0
++
++# CakePHP
++CAKE_ENV=dev
++
++# yii
++YII_ENVIRONMENT=Development
++
++#######################################
++# PROVISION environment
++
++# Context for provision [development|production]
++PROVISION_CONTEXT=development
++
++# PHP Modules
++PROVISION_PHP_BLACKFIRE=0
++PROVISION_PHP_XDEBUG=0
++
++#######################################
++# Mail
++
++# Vagrant mail sandbox
++#MAIL_GATEWAY=192.168.56.2
++
++# Mailcatcher (container)
++MAIL_GATEWAY=mail:1025
++
++#######################################
++# Internal dns routing
++DNS_DOMAIN=vm vm.dev
++
++#######################################
++# MySQL settings
++# -> if you change these settings
++#    you have to remove the database:
++#         docker-compose rm mysql
++#    because it's stored database in
++#    volume and provisioning is only
++#    done once.
++MYSQL_ROOT_PASSWORD=pass
++MYSQL_USER=user
++MYSQL_PASSWORD=pass
++MYSQL_DATABASE=db
++
++#######################################
++# PostgreSQL settings
++POSTGRES_USER=dev
++POSTGRES_PASSWORD=dev
++
++#######################################
++# FTP settings
++FTP_USER=dev
++FTP_PASSWORD=dev
++FTP_PATH=/data/ftp/
++#FTP_PATH=/docker/code/
++
++#######################################
++# Permission settings
++EFFECTIVE_UID=1000
++EFFECTIVE_GID=1000
++
++#######################################
++# Default cli user (should be www-data)
++CLI_USER=www-data
+diff --git a/docker/etc/php/.gitkeep b/docker/etc/php/.gitkeep
+new file mode 100644
+index 0000000..e166442
+--- /dev/null
++++ b/docker/etc/php/.gitkeep
+@@ -0,0 +1 @@
++.gitkeep
+diff --git a/docker/etc/php/development.ini b/docker/etc/php/development.ini
+new file mode 100644
+index 0000000..d828058
+--- /dev/null
++++ b/docker/etc/php/development.ini
+@@ -0,0 +1,41 @@
++; this file will overwrite default php.ini settings
++
++display_errors = 1
++
++short_open_tag    = On
++variables_order   = 'GPCS'
++request_order     = 'GP'
++
++allow_url_fopen   = On
++allow_url_include = Off
++
++memory_limit        = 4096M
++max_execution_time  = 900
++max_input_time      = 300
++post_max_size       = 50M
++upload_max_filesize = 50M
++max_input_vars      = 5000
++
++date.timezone = Europe/Berlin
++
++mysql.default_host = mysql
++mysqli.default_host = mysql
++
++; Zend OPCache
++opcache.enable = 1
++opcache.memory_consumption = 256
++opcache.interned_strings_buffer = 16
++opcache.max_accelerated_files = 10000
++opcache.fast_shutdown = 1
++opcache.enable_cli = 1
++opcache.revalidate_freq = 0
++
++; XDebug
++xdebug.remote_enable           = 0
++xdebug.remote_connect_back     = off
++xdebug.idekey                  = "docker"
++xdebug.cli_color               = 1
++xdebug.max_nesting_level       = 1000
++xdebug.profiler_enable_trigger = 1
++xdebug.profiler_output_dir     = '/tmp/debug/'
++xhprof.output_dir              = '/tmp/debug/'
+diff --git a/docker/etc/php/production.ini b/docker/etc/php/production.ini
+new file mode 100644
+index 0000000..d457fab
+--- /dev/null
++++ b/docker/etc/php/production.ini
+@@ -0,0 +1,36 @@
++; this file will overwrite default php.ini settings
++
++display_errors = 0
++
++short_open_tag    = On
++variables_order   = 'GPCS'
++request_order     = 'GP'
++
++allow_url_fopen   = On
++allow_url_include = Off
++
++memory_limit        = 512M
++max_execution_time  = 900
++max_input_time      = 300
++post_max_size       = 50M
++upload_max_filesize = 50M
++max_input_vars      = 5000
++
++date.timezone = Europe/Berlin
++
++mysql.default_host = mysql
++mysqli.default_host = mysql
++
++; Zend OPCache
++opcache.enable = 1
++opcache.memory_consumption = 256
++opcache.interned_strings_buffer = 16
++opcache.max_accelerated_files = 10000
++opcache.fast_shutdown = 1
++opcache.enable_cli = 1
++opcache.revalidate_freq = 2
++opcache.validate_timestamps = 1
++
++; XDebug
++xdebug.remote_enable           = 0
++xdebug.remote_connect_back     = off
+diff --git a/docker/etc/ssh/config b/docker/etc/ssh/config
+new file mode 100644
+index 0000000..2026b73
+--- /dev/null
++++ b/docker/etc/ssh/config
+@@ -0,0 +1,6 @@
++ControlMaster auto
++ControlPath /tmp/ssh_mux_%h_%p_%r
++ControlPersist 600
++
++Host bitbucket.org
++    StrictHostKeyChecking no
+\ No newline at end of file
+diff --git a/docker/main/Centos-7 b/docker/main/Centos-7
+index ad9fac0..76e0243 100644
+--- a/docker/main/Centos-7
++++ b/docker/main/Centos-7
+@@ -53,7 +53,7 @@ COPY conf/centos        /opt/docker/conf/
+ EXPOSE 9000
+ 
+ VOLUME /docker/
+-WORKDIR /docker/code/
++WORKDIR /docker/www/
+ 
+ ENTRYPOINT ["/entrypoint.sh"]
+ CMD ["supervisord"]
+diff --git a/docker/main/Ubuntu-12.04 b/docker/main/Ubuntu-12.04
+index 8965703..ff24395 100644
+--- a/docker/main/Ubuntu-12.04
++++ b/docker/main/Ubuntu-12.04
+@@ -54,7 +54,7 @@ COPY conf/ubuntu        /opt/docker/conf/
+ EXPOSE 9000
+ 
+ VOLUME /docker/
+-WORKDIR /docker/code/
++WORKDIR /docker/www/
+ 
+ ENTRYPOINT ["/entrypoint.sh"]
+ CMD ["supervisord"]
+diff --git a/docker/main/Ubuntu-14.04 b/docker/main/Ubuntu-14.04
+index 5ae4ed5..afbaec3 100644
+--- a/docker/main/Ubuntu-14.04
++++ b/docker/main/Ubuntu-14.04
+@@ -54,7 +54,7 @@ COPY conf/ubuntu        /opt/docker/conf/
+ EXPOSE 9000
+ 
+ VOLUME /docker/
+-WORKDIR /docker/code/
++WORKDIR /docker/www/
+ 
+ ENTRYPOINT ["/entrypoint.sh"]
+ CMD ["supervisord"]
+diff --git a/docker/main/Ubuntu-15.04 b/docker/main/Ubuntu-15.04
+index 8778b29..e832a11 100644
+--- a/docker/main/Ubuntu-15.04
++++ b/docker/main/Ubuntu-15.04
+@@ -54,7 +54,7 @@ COPY conf/ubuntu        /opt/docker/conf/
+ EXPOSE 9000
+ 
+ VOLUME /docker/
+-WORKDIR /docker/code/
++WORKDIR /docker/www/
+ 
+ ENTRYPOINT ["/entrypoint.sh"]
+ CMD ["supervisord"]
+diff --git a/docker/main/Ubuntu-15.10 b/docker/main/Ubuntu-15.10
+index f8a5642..1cee991 100644
+--- a/docker/main/Ubuntu-15.10
++++ b/docker/main/Ubuntu-15.10
+@@ -54,7 +54,7 @@ COPY conf/ubuntu        /opt/docker/conf/
+ EXPOSE 9000
+ 
+ VOLUME /docker/
+-WORKDIR /docker/code/
++WORKDIR /docker/www/
+ 
+ ENTRYPOINT ["/entrypoint.sh"]
+ CMD ["supervisord"]
+diff --git a/docker/main/Ubuntu-HHVM b/docker/main/Ubuntu-HHVM
+index de14ec3..8c895e3 100644
+--- a/docker/main/Ubuntu-HHVM
++++ b/docker/main/Ubuntu-HHVM
+@@ -54,7 +54,7 @@ COPY conf/ubuntu-hhvm   /opt/docker/conf/
+ EXPOSE 9000
+ 
+ VOLUME /docker/
+-WORKDIR /docker/code/
++WORKDIR /docker/www/
+ 
+ ENTRYPOINT ["/entrypoint.sh"]
+ CMD ["supervisord"]
+diff --git a/docker/main/bin/customization.sh b/docker/main/bin/customization.sh
+index 861b916..9bd57d7 100644
+--- a/docker/main/bin/customization.sh
++++ b/docker/main/bin/customization.sh
+@@ -8,3 +8,9 @@ set -o errexit   ## set -e : exit the script if any statement returns a non-true
+ export DEBIAN_FRONTEND="noninteractive"
+ 
+ ## add your custom stuff here
++
++apt-get update -q
++apt-get install -y nano vim mercurial
++
++mkdir -p /docker/www/public;
++chown -R www-data:www-data /docker/www/public;
+diff --git a/docker/main/bin/entrypoint.sh b/docker/main/bin/entrypoint.sh
+index 4bd8471..6e82376 100755
+--- a/docker/main/bin/entrypoint.sh
++++ b/docker/main/bin/entrypoint.sh
+@@ -48,7 +48,7 @@ case "$1" in
+             shift
+             exec sudo -H -E -u "${CLI_USER}" ${CLI_SCRIPT} "$@"
+         else
+-            echo "[ERROR] No CLI_SCRIPT in docker-env.yml defined"
++            echo "[ERROR] No CLI_SCRIPT in docker/env.yml defined"
+             exit 1
+         fi
+         ;;
+diff --git a/docker/satis/Dockerfile b/docker/satis/Dockerfile
+new file mode 100644
+index 0000000..5603757
+--- /dev/null
++++ b/docker/satis/Dockerfile
+@@ -0,0 +1,14 @@
++FROM ypereirareis/docker-satis:4.0
++
++RUN apt-get update && apt-get install -y \
++    mercurial
++
++ADD hgrc /etc/mercurial/hgrc
++ADD config/config.php /app/config.php
++ADD scripts/startup.sh /app/scripts/startup.sh
++ADD scripts/build.sh /app/scripts/build.sh
++
++RUN chmod +x /app/scripts/startup.sh
++RUN chmod +x /app/scripts/build.sh
++RUN rm /app/config.json
++RUN ln -s /app/config/config.json /app/config.json
+diff --git a/docker/satis/config/config.json b/docker/satis/config/config.json
+new file mode 100644
+index 0000000..f8e291a
+--- /dev/null
++++ b/docker/satis/config/config.json
+@@ -0,0 +1,16 @@
++{
++  "name": "Example Private Repo",
++  "homepage": "http://satis:80",
++  "repositories": [
++    { "type": "vcs", "url": "https://github.com/Flownative/neos-compressor"}
++  ],
++  "require-all":true,
++  "require-dependencies":true,
++  "require-dev-dependencies":true,
++  "minimum-stability":"dev",
++  "archive": {
++    "directory": "dist",
++    "format": "zip",
++    "skip-dev": false
++  }
++}
+diff --git a/docker/satis/config/config.php b/docker/satis/config/config.php
+new file mode 100644
+index 0000000..375e21f
+--- /dev/null
++++ b/docker/satis/config/config.php
+@@ -0,0 +1,62 @@
++<?php
++
++/**
++ * Satis configuration file
++ */
++$app['satis.filename'] = '/app/config.json';
++
++/**
++ * Satis auditlog (cheap backup/versioning) path
++ */
++$app['satis.auditlog'] = __DIR__.'/data';
++
++/**
++ * Satis main configuration class
++ */
++$app['satis.class'] = 'Playbloom\\Satisfy\\Model\\Configuration';
++
++/**
++ * Default values for a new repository
++ */
++$app['composer.repository.type_default'] = 'git';
++$app['composer.repository.url_default'] = '';
++
++/**
++ * Default repository url pattern
++ */
++$app['repository.pattern'] = '.*';
++
++/**
++ * More restrictive username/email constraints for production
++ */
++$app['auth'] = $app->share(function() {
++    return function($username) {
++        return (bool) preg_match('/@your-organization\.tld$/', $username);
++    };
++});
++
++/**
++ * If the simple standard login form should be used to restrict admin section
++ */
++$app['auth.use_login_form'] = true;
++
++/**
++ * Users authorized to access admin section (an array of username => password)
++ * Default credentials are: admin / foo.
++ *
++ * You can generate a new password with the following command:
++ *
++ *      php -r "echo hash('sha1', 'mypassword');"
++ *
++ */
++$app['auth.users'] = array(
++    'admin' => '0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33',
++    'john' => 'd6b4e84ee7f31d88617a6b60421451272ebf1a3a',
++);
++
++/**
++ * If OpenID auth via Google should be used.
++ * Ignored if auth.use_login_form is set to true
++ */
++$app['auth.use_google_openid'] = false;
++
+diff --git a/docker/satis/hgrc b/docker/satis/hgrc
+new file mode 100644
+index 0000000..e310c29
+--- /dev/null
++++ b/docker/satis/hgrc
+@@ -0,0 +1,5 @@
++# system-wide mercurial configuration file
++# See hgrc(5) for more information
++
++[trusted]
++users = 1000
+\ No newline at end of file
+diff --git a/docker/satis/scripts/build.sh b/docker/satis/scripts/build.sh
+new file mode 100644
+index 0000000..d4ed788
+--- /dev/null
++++ b/docker/satis/scripts/build.sh
+@@ -0,0 +1,9 @@
++SATIS_PATH="/satisfy/vendor"
++SATIS_BIN="/satisfy/vendor/bin/satis"
++SATIS_PUBLIC="/satisfy/web/"
++
++${SATIS_BIN} -n build /app/config.json ${SATIS_PUBLIC}
++
++# bypass nginx statig file cache problems..
++cat "${SATIS_PUBLIC}packages.json" > "${SATIS_PUBLIC}packages.json.tmp";
++mv "${SATIS_PUBLIC}packages.json.tmp" "${SATIS_PUBLIC}packages.json";
+diff --git a/docker/satis/scripts/startup.sh b/docker/satis/scripts/startup.sh
+new file mode 100644
+index 0000000..d3a21e0
+--- /dev/null
++++ b/docker/satis/scripts/startup.sh
+@@ -0,0 +1,58 @@
++# Reset
++Color_Off='\033[0m'       # Text Reset
++
++# Regular Colors
++Red='\033[0;31m'          # Red
++Green='\033[0;32m'        # Green
++Yellow='\033[0;33m'       # Yellow
++
++DEFAULT_CRONTAB_FREQUENCY="* * * * *"
++DEFAULT_CRONTAB_FREQUENCY_ESCAPED=$(printf '%s\n' "${DEFAULT_CRONTAB_FREQUENCY}" | sed 's/[[\.*^$/]/\\&/g')
++
++[ -z "$CRONTAB_FREQUENCY" ] && CRONTAB_FREQUENCY="$DEFAULT_CRONTAB_FREQUENCY"
++CRONTAB_FREQUENCY_ESCAPED=$(printf '%s\n' "${CRONTAB_FREQUENCY}" | sed 's/[[\.*^$/]/\\&/g')
++
++echo ""
++cat /app/config.json
++echo ""
++echo ""
++
++if [ ! -z "$PRIVATE_REPO_DOMAIN" ]; then
++  echo ""
++  echo -e "$Yellow"
++  echo "======================================================================"
++  echo "PRIVATE_REPO_DOMAIN env var is now PRIVATE_REPO_DOMAIN_LIST !!! "
++  echo "----------------------------------------------------------------------"
++  echo " Or use tag 1.0.0 to stay compatible with PRIVATE_REPO_DOMAIN env var"
++  echo "ypereirareis/docker-satis:1.0.0"
++  echo "======================================================================"
++  echo -e "$Color_Off"
++
++  exit 1
++fi
++
++touch /root/.ssh/known_hosts
++
++echo " >> Creating the correct known_hosts file"
++for _DOMAIN in $PRIVATE_REPO_DOMAIN_LIST ; do
++    ssh-keyscan -t rsa $_DOMAIN >> /root/.ssh/known_hosts
++done
++
++echo " >> Copying host ssh key from /var/tmp/id to /root/.ssh/id_rsa"
++cp /var/tmp/id /root/.ssh/id_rsa
++
++# echo " >> Building Satis for the first time"
++# scripts/build.sh
++
++if [[ $CRONTAB_FREQUENCY == -1 ]]; then
++  echo " > No Cron"
++else
++  echo " > Crontab frequency set to: ${CRONTAB_FREQUENCY}"
++  sed -i "s/${DEFAULT_CRONTAB_FREQUENCY_ESCAPED}/${CRONTAB_FREQUENCY_ESCAPED}/g" /etc/cron.d/satis-cron
++fi
++
++# Copy custom config if exists
++[[ -f /app/config.php ]] && cp /app/config.php  /satisfy/app/config.php
++
++
++exit 0
+\ No newline at end of file
+diff --git a/documentation/CUSTOMIZE.md b/documentation/CUSTOMIZE.md
+deleted file mode 100644
+index e7b7344..0000000
+--- a/documentation/CUSTOMIZE.md
++++ /dev/null
+@@ -1,21 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# Customizing
+-
+-## Custom packages (`main` controller)
+-
+-You can add custom shell commands in `docker/main/{DISTRIBUTION}/bin/customization.sh`
+-
+-
+-## Custom php.ini directives
+-
+-Modify the `docker/main/{DISTRIBUTION}/conf/php.ini`, it will be added on top of the default php.ini so
+-you can overwrite any directives.
+-
+-After modification rebuild your `main` container:
+-
+-```bash
+-docker-compose stop
+-docker-compose build main
+-docker-compose up -d
+-```
+diff --git a/documentation/DOCKER-INFO.md b/documentation/DOCKER-INFO.md
+deleted file mode 100644
+index 0b28614..0000000
+--- a/documentation/DOCKER-INFO.md
++++ /dev/null
+@@ -1,108 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# Docker container informations
+-
+-## Docker layout
+-
+-Container                 | Description
+-------------------------- | -------------------------------
+-main                      | Main container with PHP-FPM and tools (your entrypoint for bash, php and other stuff)
+-storage                   | Storage container, eg. for Solr data
+-web                       | Apache HTTPD or Nginx webserver
+-mysql                     | MySQL database
+-postgres (optional)       | PostgreSQL database
+-solr (optional)           | Apache Solr server
+-elasticsearch (optional)  | Elasticsearch server
+-memcached (optional)      | Memcached server
+-redis (optional)          | Redis server
+-ftps (optional)           | FTP server (vsftpd)
+-mailcatcher (optional)    | Mailserver with easy web and REST interface for mailing
+-
+-This directory will be mounted under `/docker` in `main` and `web` container.
+-
+-## Docker images
+-Container                 | Source
+-------------------------- | -------------------------------
+-main/ubuntu               | [Ubuntu](https://registry.hub.docker.com/_/ubuntu/) *official* (prebuilt available from https://hub.docker.com/r/webdevops/php-boilerplate/)
+-main/centos               | [CentOS](https://registry.hub.docker.com/_/centos/) *official* (prebuilt available from https://hub.docker.com/r/webdevops/php-boilerplate/)
+-storage                   | [Ubuntu](https://registry.hub.docker.com/_/ubuntu/) *official*
+-web                       | [Apache](https://registry.hub.docker.com/_/httpd/) *official* or [Nginx](https://registry.hub.docker.com/_/nginx/) *official*
+-mysql                     | [MySQL](https://registry.hub.docker.com/_/mysql/) *official*
+-postgres                  | [PostgreSQL](https://registry.hub.docker.com/_/postgres/) *official*
+-solr (optional)           | [Solr](https://registry.hub.docker.com/u/guywithnose/solr/) from _guywithnose_
+-elasticsearch (optional)  | [Elasticsearch](https://registry.hub.docker.com/_/elasticsearch/) *official*
+-memcached (optional)      | [Memcached](https://registry.hub.docker.com/_/memcached/) *official*
+-redis (optional)          | [Redis](https://registry.hub.docker.com/_/redis/) *official*
+-ftp (optional)            | [Ubuntu](https://registry.hub.docker.com/_/ubuntu/) *official*
+-mailcatcher (optional)    | [Mailcatcher](https://registry.hub.docker.com/u/schickling/mailcatcher/) from _schickling_
+-
+-## Makefile
+-
+-Customize the [Makefile](Makefile) for your needs.
+-
+-Command                   | Description
+-------------------------- | -------------------------------
+-make bash                 | Enter main container with bash (user www-data)
+-make root                 | Enter main container with bash (user root)
+-<br>                      |
+-make backup               | General backup (run all backup tasks)
+-make restore              | General restore (run all restore tasks)
+-<br>                      |
+-make mysql-backup         | Backup MySQL databases
+-make mysql-restore        | Restore MySQL databases
+-<br>                      |
+-make solr-backup          | Backup Solr cores
+-make solr-restore         | Restore Solr cores
+-<br>                      |
+-make build                | Run building (composer, gulp, bower)
+-
+-## Environment settings
+-
+-Environment           | Description
+---------------------- | -------------
+-DOCUMENT_ROOT         | Document root for Nginx and Apache HTTPD, can be absolute or relative (to /docker inside the container).
+-DOCUMENT_INDEX        | Default document index file for Nginx and Apache HTTPd
+-CLI_SCRIPT            | Target for "cli" command of main container
+-CLI_USER              | User which should be used to run CLI scripts (normally www-data, equals php-fpm user)
+-<br>                  |
+-TYPO3_CONTEXT         | Context for TYPO3, can be used for TypoScript conditions and AdditionalConfiguration
+-FLOW_CONTEXT          | Context for FLOW and NEOS
+-<br>                  |
+-MAIL_GATEWAY          | Upstream server for sending mails (ssmtp)
+-DNS_DOMAIN            | List of wildcard domains pointing to webserver (eg. for local content fetching)
+-<br>                  |
+-MYSQL_ROOT_PASSWORD   | Password for MySQL user "root"
+-MYSQL_USER            | Initial created MySQL user
+-MYSQL_PASSWORD        | Password for initial MySQL user
+-MYSQL_DATABASE        | Initial created MySQL database
+-<br>                  |
+-PHP_TIMEZONE          | Timezone (date.timezone) setting for PHP (cli and fpm)
+-EFFECTIVE_UID         | Effective UID for php, fpm und webserver
+-EFFECTIVE_GID         | Effective GID for php, fpm und webserver
+-
+-## Xdebug Remote debugger (PhpStorm)
+-
+-### 1.) Add a server (Preferences -> Languages & Frameworks -> PHP -> Servers).
+-
+-Setting                          | Value
+----------------------------------| -------------
+-Hostname                         | IP or Hostname of VM
+-Port                             | 8000
+-Debugger                         | Xdebug  
+-Use path mappings                | Check
+-Path mapping of folder 'code'    | /docker/code/
+-
+-### 2.) Add a debug connection (Run -> Edit Configurations... -> Connections) and create a new configuration (PHP Web Application).
+-
+-Setting               | Value
+---------------------- | -------------
+-Server                | Server you created before
+-Start URL             | /
+-Browser               | Choose one
+-
+-Save, set a break point and test the debugger.
+-
+-## Application cache
+-
+-Symlink your application cache (eg. typo3temp/) to `/data/cache/` and it will be stored inside the `storage` container
+-so it will be accessable within all containers (eg. web or main).
+diff --git a/documentation/DOCKER-QUICKSTART.md b/documentation/DOCKER-QUICKSTART.md
+deleted file mode 100644
+index f14b967..0000000
+--- a/documentation/DOCKER-QUICKSTART.md
++++ /dev/null
+@@ -1,63 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# Docker Quickstart
+-
+-## Docker short introduction
+-
+-Create and start containers (eg. first start):
+-
+-```bash
+-docker-compose up -d
+-```
+-
+-Stop containers
+-
+-```bash
+-docker-compose stop
+-```
+-
+-Start containers (only stopped containers)
+-
+-```bash
+-docker-compose start
+-```
+-
+-Build (but not create and start) containers
+-
+-```bash
+-docker-compose build --no-cache
+-```
+-
+-Delete container content
+-
+-```bash
+-docker-compose rm --force
+-```
+-
+-Recreate containers (if there is any issue or just to start from a clean build)
+-
+-```bash
+- docker-compose stop
+- docker-compose rm --force
+- docker-compose build --no-cache
+- docker-compose up -d
+-```
+-
+-Logs (eg. for debugging)
+-
+-```bash
+-# show all logs
+-docker-compose logs
+-
+-# ... or only php
+-docker-compose logs main
+-
+-# ... or only php and webserver
+-docker-compose logs main web
+-```
+-
+-CLI script (defined in docker-env.yml)
+-
+-```bash
+-docker-compose run --rm main cli help
+-```
+\ No newline at end of file
+diff --git a/documentation/DOCKER-STARTUP.md b/documentation/DOCKER-STARTUP.md
+deleted file mode 100644
+index 1fa4583..0000000
+--- a/documentation/DOCKER-STARTUP.md
++++ /dev/null
+@@ -1,32 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# First startup
+-
+-## Create project
+-
+-Checkout this project and create and run the Docker containers using [docker-compose](https://github.com/docker/compose):
+-
+-```bash
+-git clone https://github.com/webdevops/php-docker-boilerplate.git projectname
+-cd projectname
+-docker-compose up -d
+-```
+-
+-Now create your project inside the docker boilerplate:
+-
+-- [Create new Symfony project](PROJECT-SYMFONY.md)
+-- [Running any other php based project](PROJECT-OTHER.md)
+-- [Running existing project](PROJECT-EXISTING.md)
+-
+-For an existing project just put your files into `code/` folder or use git to clone your project into `code/`.
+-
+-## Advanced usage (git)
+-
+-Use this boilerplate as template and customize it for each project. Put this Docker
+-configuration for each project into seperate git repositories.
+-
+-Now set your existing project repository to be a git submodule in `code/`.
+-Every developer now needs only to clone the Docker repository with `--recursive` option
+-to get both, the Docker configuration and the TYPO3 installation.
+-
+-For better useability track a whole branch (eg. develop or master) as submodule and not just a single commit.
+diff --git a/documentation/INSTALL.md b/documentation/INSTALL.md
+deleted file mode 100644
+index d613294..0000000
+--- a/documentation/INSTALL.md
++++ /dev/null
+@@ -1,33 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# Installation
+-
+-## Reqirements
+-
+-- GNU/Linux with Docker (recommendation: Vagrant VM with Docker or native Linux with Docker)
+-- make
+-- [composer](https://getcomposer.org/)
+-- [docker-compose](https://github.com/docker/compose)
+-
+-If you want to run a Docker VM make sure you're using VMware or Parallels Desktop because of
+-the much faster virtualisation (networking, disk access, shared folders) compared to VirtualBox.
+-
+-There is also a [Vagrant VM for VirtualBox, VMware and Parallels](https://github.com/webdevops/vagrant-development)
+-with a mailcatcher (Postfix with Dovecot, catches all outgoing mails).
+-
+-_Warning:_ Boot2docker ist not recommended because of slow/buggy file sharing between host and guest and there is no
+-convienient way to access the box with Samba or SSH.
+-This Docker boilerplate tries to avoid common anti-pattners like a Samba/SSH container because Boot2docker
+-isn't able to handle such tasks.
+-
+-For more convenience use [CliTools.phar](https://github.com/webdevops/clitools) (will also run on native Linux, not only inside a Vagrant box)
+-
+-## First startup
+-
+-```bash
+-git clone --recursive https://github.com/webdevops/php-docker-boilerplate.git projectname
+-
+-cd projectname
+-
+-docker-compose up -d
+-```
+diff --git a/documentation/PROJECT-EXISTING.md b/documentation/PROJECT-EXISTING.md
+deleted file mode 100644
+index 70513b4..0000000
+--- a/documentation/PROJECT-EXISTING.md
++++ /dev/null
+@@ -1,29 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# Running any existing project
+-
+-## Create project
+-
+-Checkout your git repository
+-
+-```bash
+-make create-project git https://github..../
+-```
+-
+-or manually
+-```bash
+-git clone --recursive https://github..../ code/
+-```
+-
+-Check `DOCUMENT_ROOT` and `DOCUMENT_INDEX` in `docker-env.yml`
+-
+-## Cli runner
+-
+-You can run one-shot command inside the `main` service container:
+-
+-```bash
+-docker-compose run --rm main any-php-file.php argument1 argument2
+-docker-compose run --rm main bash
+-```
+-
+-Webserver is available at Port 8000
+diff --git a/documentation/PROJECT-OTHER.md b/documentation/PROJECT-OTHER.md
+deleted file mode 100644
+index 4e49c81..0000000
+--- a/documentation/PROJECT-OTHER.md
++++ /dev/null
+@@ -1,20 +0,0 @@
+-[<-- Back to main section](DOCKER-STARTUP.md)
+-
+-# Running any php based project
+-
+-## Create project
+-
+-- Put your project files into `code/`
+-- If needed modify `DOCUMENT_ROOT` and `DOCUMENT_INDEX` in `docker-env.yml`
+-- You're done - really
+-
+-## Cli runner
+-
+-You can run one-shot command inside the `main` service container:
+-
+-```bash
+-docker-compose run --rm main any-php-file.php argument1 argument2
+-docker-compose run --rm main bash
+-```
+-
+-Webserver is available at Port 8000
+diff --git a/documentation/PROJECT-SYMFONY.md b/documentation/PROJECT-SYMFONY.md
+deleted file mode 100644
+index 8c258ba..0000000
+--- a/documentation/PROJECT-SYMFONY.md
++++ /dev/null
+@@ -1,25 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# Running SYMFONY
+-
+-## Create SYMFONY project
+-
+-```bash
+-make create symfony
+-```
+-
+-And change `DOCUMENT_ROOT` and `DOCUMENT_ROOT` in `docker-env.yml`:
+-
+-    DOCUMENT_ROOT=code/web/
+-    DOCUMENT_INDEX=app_dev.php
+-
+-## SYMFONY cli runner
+-
+-You can run one-shot command inside the `main` service container:
+-
+-```bash
+-docker-compose run --rm main php code/app/console
+-docker-compose run --rm main bash
+-```
+-
+-Webserver is available at Port 8000
+diff --git a/documentation/SERVICES.md b/documentation/SERVICES.md
+deleted file mode 100644
+index eed775e..0000000
+--- a/documentation/SERVICES.md
++++ /dev/null
+@@ -1,83 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# Services
+-
+-### Web (Nginx or Apache HTTPd)
+-
+-Setting       | Value
+-------------- | -------------
+-Host          | web:80 and web:443 (ssl)
+-External Port | 8000 and 8443 (ssl)
+-
+-### MySQL
+-
+-You can choose between [MySQL](https://www.mysql.com/) (default), [MariaDB](https://www.mariadb.org/)
+-and [PerconaDB](http://www.percona.com/software) in `docker/mysql/Dockerfile`
+-
+-Setting       | Value
+-------------- | -------------
+-User          | dev (if not changed in env)
+-Password      | dev (if not changed in env)
+-Database      | database (if not changed in env)
+-Host          | mysql:3306
+-External Port | 13306
+-
+-Access fo MySQL user "root" and "dev" will be allowed from external hosts (eg. for debugging, dumps and other stuff).
+-
+-
+-### PostgreSQL
+-
+-Setting       | Value
+-------------- | -------------
+-User          | dev (if not changed in env)
+-Password      | dev (if not changed in env)
+-Host          | postgres:5432
+-External Port | 15432
+-
+-
+-### Solr
+-
+-Setting       | Value
+-------------- | -------------
+-Host          | solr:8983
+-External Port | 18983
+-Cores         | docker/solr/conf/solr.xml (data dirs are created automatically)
+-
+-### Elasticsearch (disabled by default)
+-
+-Setting       | Value
+-------------- | -------------
+-Host          | elasticsearch:9200 and :9300
+-External Port | 19200 and 19300
+-
+-### Redis
+-
+-Setting       | Value
+-------------- | -------------
+-Host          | redis
+-Port          | 6379
+-
+-### Memcached
+-
+-Setting       | Value
+-------------- | -------------
+-Host          | memcached
+-Port          | 11211
+-
+-### Mailcatcher
+-
+-Setting       | Value
+-------------- | -------------
+-Host          | mail
+-SMTP port     | 1025
+-Web port      | 1080
+-
+-### FTP
+-
+-Setting       | Value
+-------------- | -------------
+-Host          | ftp
+-Ports         | 20,21
+-User          | dev (if not changed in env)
+-Password      | dev (if not changed in env)
+-Path          | /data/ftp (if not changed in env)
+diff --git a/documentation/TROUBLESHOOTING.md b/documentation/TROUBLESHOOTING.md
+deleted file mode 100644
+index 0dd8e4b..0000000
+--- a/documentation/TROUBLESHOOTING.md
++++ /dev/null
+@@ -1,27 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# Troubleshooting
+-
+-## Startup or (docker) linking errors (safe reset)
+-
+-If you got any startup issues you can try to rebuild `main` and `web` containers.
+-You won't lose any data with this way - it's a safe reset.
+-
+-```bash
+-docker-compose stop
+-docker-compose rm --force main web
+-docker-compose build --no-cache main web
+-docker-compose up -d
+-```
+-
+-## Complete reset
+-
+-Reset all containers, delete all data (`mysql`, `solr` ..) but not your project files in `code/`!
+-
+-```bash
+-docker-compose stop
+-docker-compose rm --force
+-docker-compose build --no-cache
+-docker-compose up -d
+-```
+-
+diff --git a/documentation/UPDATE.md b/documentation/UPDATE.md
+deleted file mode 100644
+index a766686..0000000
+--- a/documentation/UPDATE.md
++++ /dev/null
+@@ -1,23 +0,0 @@
+-[<-- Back to main section](../README.md)
+-
+-# Update
+-
+-## Preparation
+-
+-If you have cloned the git repository it's safe to pull the new version.
+-
+-If you have used a zip file make sure to replace the `docker/` directory and also
+-update `docker-compose.yml` and `docker-env.yml`.
+-
+-For [changes see CHANGELOG.md](/CHANGELOG.md)
+-
+-## Update to 3.4.x
+-As `PHP_UID` was replaced with `EFFECTIVE_UID` and `PHP_GID` was replaced with `EFFECTIVE_GID` you
+-have to rebuild all containers with this variables: `main` and `web`
+-
+-```bash
+-docker-compose stop
+-docker-compose rm --force main web
+-docker-compose build --no-cache main web
+-docker-compose up
+-```
