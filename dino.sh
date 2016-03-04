@@ -3,7 +3,7 @@
 # Docker Development init for Neos and Flow
 
 TIME_BEFORE=$(date +%s)
-CURRENT_VERSION="0.4.7"
+CURRENT_VERSION="0.4.8"
 
 BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
@@ -104,10 +104,13 @@ if [[ "$1" == "version" || "$1" == "-v" ]]; then
   else
     echo "dino.sh | Version: $CURRENT_VERSION"
 
-    DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
-    if [[ "$CURRENT_VERSION" != "$DINO_RUN_VERSION" ]]; then
-      echo "        | docker Patch is not up to date!"
-      echo "        | Please update: ./dino.sh reload --force"
+    if [ -f ./docker/bin/run.sh ]; then
+      chmod +x ./docker/bin/run.sh
+      DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
+      if [[ "$CURRENT_VERSION" != "$DINO_RUN_VERSION" ]]; then
+        echo "        | docker Patch is not up to date! ($DINO_RUN_VERSION)"
+        echo "        | Please update: ./dino.sh reload --force"
+      fi
     fi
 
     exit
@@ -345,11 +348,14 @@ if [ ! -d ./docker/ ]; then
 fi
 
 # Check dino docker patch version:
-DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
-if [[ "$CURRENT_VERSION" != "$DINO_RUN_VERSION" ]]; then
-  echo "dino.sh | docker Patch is not up to date!"
-  echo "        | Please update: ./dino.sh reload --force"
-  exit
+if [ -f ./docker/bin/run.sh ]; then
+  chmod +x ./docker/bin/run.sh
+  DINO_RUN_VERSION=$(echo `./docker/bin/run.sh version tight`)
+  if [[ "$CURRENT_VERSION" != "$DINO_RUN_VERSION" ]]; then
+    echo "dino.sh | docker Patch is not up to date! ($DINO_RUN_VERSION vs. $CURRENT_VERSION)"
+    echo "        | Please update: ./dino.sh reload --force"
+    exit
+  fi
 fi
 
 if [[ "$DINO_SETTINGS_SATIS" == "enabled" ]]; then
