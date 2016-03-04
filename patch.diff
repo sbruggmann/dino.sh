@@ -698,13 +698,13 @@ index 0000000..ef1feb5
 +esac
 diff --git a/docker/bin/run.sh b/docker/bin/run.sh
 new file mode 100644
-index 0000000..a1f717a
+index 0000000..5119b20
 --- /dev/null
 +++ b/docker/bin/run.sh
 @@ -0,0 +1,182 @@
 +#!/usr/bin/env bash
 +
-+CURRENT_VERSION="0.4.6"
++CURRENT_VERSION="0.4.7"
 +
 +if [[ "$1" == "version" || "$1" == "-v" ]]; then
 +  if [[ "$2" == "tight" || "$2" == "-t" ]]; then

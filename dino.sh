@@ -3,7 +3,7 @@
 # Docker Development init for Neos and Flow
 
 TIME_BEFORE=$(date +%s)
-CURRENT_VERSION="0.4.6"
+CURRENT_VERSION="0.4.7"
 
 BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
