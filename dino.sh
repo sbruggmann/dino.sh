@@ -266,6 +266,20 @@ elif [[ "$1" == "bash" || "$1" == "ssh" ]]; then
   exit
 fi
 
+if [[ "$1" == "zsh" ]]; then
+  echo "dino.sh | zsh:"
+  echo "dino.sh | Login as www-data.."
+
+  docker exec -it -u root "$PROJECT_NAME$PROJECT_MAIN" sudo apt-get -y install zsh
+  docker exec -it -u root "$PROJECT_NAME$PROJECT_MAIN" sh -c "$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
+  docker exec -it -u root "$PROJECT_NAME$PROJECT_MAIN" mkdir -p ~/.oh-my-zsh/custom/plugins
+  docker exec -it -u root "$PROJECT_NAME$PROJECT_MAIN" "cd ~/.oh-my-zsh/custom/plugins; git clone git://github.com/sandstorm/oh-my-zsh-flow3-plugin.git flow"
+
+  docker exec -it -u www-data "$PROJECT_NAME$PROJECT_MAIN" bash
+  printf "\n        | Welcome back on your host terminal\n"
+  exit
+fi
+
 if [[ ( "$1" == "satis" ) && ( "$2" == "bash" ) ]]; then
   echo "dino.sh | satis:"
   echo "dino.sh | Login as root.."
