@@ -3,7 +3,7 @@
 # Docker Development init for Neos and Flow
 
 TIME_BEFORE=$(date +%s)
-CURRENT_VERSION="0.4.8"
+CURRENT_VERSION="0.4.9"
 
 BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
@@ -641,29 +641,28 @@ if grep -q "# dino.sh context configuration:" "./www/$PROJECT_TYPE/Web/.htaccess
 else
   echo "dino.sh | Write .htaccess FLOW_CONTEXT"
   echo "\n# dino.sh context configuration:" >> "./www/$PROJECT_TYPE/Web/.htaccess"
-  echo "SetEnvIf Host \.dev$ FLOW_CONTEXT=Development" >> "./www/$PROJECT_TYPE/Web/.htaccess"
-  echo "SetEnvIf Host \.prod$ FLOW_CONTEXT=Production/Local" >> "./www/$PROJECT_TYPE/Web/.htaccess"
-  echo "SetEnvIf Host ^stage\. FLOW_CONTEXT=Production/Stage" >> "./www/$PROJECT_TYPE/Web/.htaccess"
-  echo "RewriteCond %{HTTP_HOST} !\.dev$" >> "./www/$PROJECT_TYPE/Web/.htaccess"
-  echo "RewriteCond %{HTTP_HOST} !\.prod$" >> "./www/$PROJECT_TYPE/Web/.htaccess"
-  echo "RewriteCond %{HTTP_HOST} !^stage" >> "./www/$PROJECT_TYPE/Web/.htaccess"
-  echo "RewriteRule (.*) $1 [E=FLOW_CONTEXT:Production]" >> "./www/$PROJECT_TYPE/Web/.htaccess"
+  echo 'SetEnvIf Host \.dev$ FLOW_CONTEXT=Development' >> "./www/$PROJECT_TYPE/Web/.htaccess"
+  echo 'SetEnvIf Host \.prod$ FLOW_CONTEXT=Production/Local' >> "./www/$PROJECT_TYPE/Web/.htaccess"
+  echo 'SetEnvIf Host ^stage\. FLOW_CONTEXT=Production/Stage' >> "./www/$PROJECT_TYPE/Web/.htaccess"
+  echo 'RewriteCond %{HTTP_HOST} !\.dev$' >> "./www/$PROJECT_TYPE/Web/.htaccess"
+  echo 'RewriteCond %{HTTP_HOST} !\.prod$' >> "./www/$PROJECT_TYPE/Web/.htaccess"
+  echo 'RewriteCond %{HTTP_HOST} !^stage' >> "./www/$PROJECT_TYPE/Web/.htaccess"
+  echo 'RewriteRule (.*) $1 [E=FLOW_CONTEXT:Production]' >> "./www/$PROJECT_TYPE/Web/.htaccess"
 fi
 
 printf "\n"
 
 DOMAIN_NAME=$(echo ${PWD##*/} | sed 's/\..*//g')
 
-if [ ! -f ./npm-shrinkwrap.json ]; then
-  echo "dino.sh | PLEASE add a npm-shrinkwrap.json File!"
+if [ ! -f ./npm-shrinkwrap.json && ! -f ./yarn.lock ]; then
+  echo "dino.sh | PLEASE add either a npm-shrinkwrap.json or yarn.lock file manually!"
   printf "dino.sh | "
-  npm shrinkwrap -dev
 fi
 
 if [ ! -f ./.nvmrc ]; then
-  echo "dino.sh | PLEASE add a .nvmrc File!"
+  echo "dino.sh | I have added the .nvmrc File automatically!"
   node -v > .nvmrc
-  echo "dino.sh | wrote .nvmrc"
+  echo "dino.sh | "
 fi
 
 if [ ! -f ~/.ssh/id_rsa ]; then

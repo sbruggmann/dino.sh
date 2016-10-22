@@ -704,7 +704,7 @@ index 0000000..5ef6cba
 @@ -0,0 +1,182 @@
 +#!/usr/bin/env bash
 +
-+CURRENT_VERSION="0.4.8"
++CURRENT_VERSION="0.4.9"
 +
 +if [[ "$1" == "version" || "$1" == "-v" ]]; then
 +  if [[ "$2" == "tight" || "$2" == "-t" ]]; then
