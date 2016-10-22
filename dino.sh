@@ -3,7 +3,7 @@
 # Docker Development init for Neos and Flow
 
 TIME_BEFORE=$(date +%s)
-CURRENT_VERSION="0.4.9"
+CURRENT_VERSION="0.4.10"
 
 BASE_PATH="$PWD"
 PROJECT_NAME=$(echo ${PWD##*/} | sed 's/[^a-zA-Z0-9]//g')
@@ -654,9 +654,9 @@ printf "\n"
 
 DOMAIN_NAME=$(echo ${PWD##*/} | sed 's/\..*//g')
 
-if [ ! -f ./npm-shrinkwrap.json && ! -f ./yarn.lock ]; then
+if [ ! -f ./npm-shrinkwrap.json ] && [ ! -f ./yarn.lock ]; then
   echo "dino.sh | PLEASE add either a npm-shrinkwrap.json or yarn.lock file manually!"
-  printf "dino.sh | "
+  echo "dino.sh | "
 fi
 
 if [ ! -f ./.nvmrc ]; then
